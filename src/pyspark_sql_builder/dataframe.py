@@ -9,6 +9,7 @@ from pyspark_sql_builder.column import Column, _quote_ident
 from pyspark_sql_builder.group import GroupedData
 
 if TYPE_CHECKING:
+    from pyspark_sql_builder.readwriter import DataFrameWriter
     from pyspark_sql_builder.session import SparkSession
 
 
@@ -191,6 +192,12 @@ class DataFrame:
     def explain(self, extended: bool = False) -> None:
         print("== Physical Plan ==")
         print(self.generate_query())
+
+    @property
+    def write(self) -> DataFrameWriter:
+        from pyspark_sql_builder.readwriter import DataFrameWriter
+
+        return DataFrameWriter(self._session, self)
 
     def copy(self) -> DataFrame:
         return DataFrame(self._query, self._session)

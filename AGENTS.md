@@ -50,6 +50,12 @@ Exception: `SparkSession` may contain driver-connection helpers and constructor 
 - **`GroupedData` breaks circular import** via `TYPE_CHECKING` + lazy `from pyspark_sql_builder.dataframe import DataFrame as _DataFrame` inside `agg()`.
 - **`SparkSession` exceptions** (deviation from PySpark): accepts `connection` and `dialect` kwargs; has `target_dialect` prop; `to_arrow_reader(query)` for execution; `range()` exists as a convenience. `read`/`writer` properties return stubs.
 
+## Design principles
+
+- **No silent unsupported behavior**: If a Spark API parameter has no equivalent or cannot be implemented for the target format/driver, raise `ValueError` with a clear message — never silently ignore.
+- **Streaming-first, no materialization**: Always use `RecordBatchReader` / lazy iteration. Never call `read_all()`, `to_pylist()`, `to_pydict()`, or otherwise materialize the full dataset in memory. Data must flow through Arrow zero-copy wherever possible.
+- **Explicit over implicit**: If a codec, option, or format is not supported, the user must be told immediately via an exception. Silent fallbacks or no-ops lead to confusion and data loss.
+
 ## Config
 
 - **Build**: `uv_build` (not setuptools)
