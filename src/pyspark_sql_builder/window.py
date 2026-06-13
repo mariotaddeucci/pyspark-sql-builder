@@ -12,15 +12,13 @@ class Window:
     def partitionBy(*cols: Column | str) -> Window:
         w = Window()
         w._partition_by = [
-            Column(_quote_ident(c)) if isinstance(c, str) else c
-            for c in cols
+            Column(_quote_ident(c)) if isinstance(c, str) else c for c in cols
         ]
         return w
 
     def orderBy(self, *cols: Column | str) -> Window:
         self._order_by = [
-            Column(_quote_ident(c)) if isinstance(c, str) else c
-            for c in cols
+            Column(_quote_ident(c)) if isinstance(c, str) else c for c in cols
         ]
         return self
 

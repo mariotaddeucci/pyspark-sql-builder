@@ -33,6 +33,7 @@ class DataFrame:
 
         if session is None:
             from pyspark_sql_builder.session import SparkSession as _Session
+
             self._session = _Session()
 
     @classmethod
@@ -53,6 +54,7 @@ class DataFrame:
         df._alias = None
         if session is None:
             from pyspark_sql_builder.session import SparkSession as _Session
+
             df._session = _Session()
         return df
 
@@ -74,8 +76,7 @@ class DataFrame:
     def select(self, *columns: Column | str) -> DataFrame:
         df = self._clone()
         df._projections = [
-            Column(_quote_ident(c)) if isinstance(c, str) else c
-            for c in columns
+            Column(_quote_ident(c)) if isinstance(c, str) else c for c in columns
         ]
         return df
 
@@ -133,8 +134,7 @@ class DataFrame:
     def orderBy(self, *columns: Column | str) -> DataFrame:
         df = self._clone()
         df._order_by = [
-            Column(_quote_ident(c)) if isinstance(c, str) else c
-            for c in columns
+            Column(_quote_ident(c)) if isinstance(c, str) else c for c in columns
         ]
         return df
 
@@ -169,7 +169,8 @@ class DataFrame:
             return self.select("*")
         col_names = {c.name if isinstance(c, Column) else c for c in columns}
         remaining: list[Column | str] = [
-            c for c in projections
+            c
+            for c in projections
             if not (isinstance(c, Column) and c.name in col_names)
             and not (isinstance(c, str) and c in col_names)
         ]
@@ -230,6 +231,7 @@ class DataFrame:
         session = self._session
         if session is None:
             from pyspark_sql_builder.session import SparkSession as _Session
+
             session = _Session()
         target = dialect or session.dialect
         if target == "spark":
@@ -262,8 +264,7 @@ class DataFrame:
 
         if self._projections:
             cols = ", ".join(
-                c._expr if isinstance(c, Column) else str(c)
-                for c in self._projections
+                c._expr if isinstance(c, Column) else str(c) for c in self._projections
             )
             parts.append(cols)
         else:
@@ -288,9 +289,7 @@ class DataFrame:
             on_clause = join_info["on"]
             if on_clause:
                 on_sql = (
-                    on_clause._expr
-                    if isinstance(on_clause, Column)
-                    else str(on_clause)
+                    on_clause._expr if isinstance(on_clause, Column) else str(on_clause)
                 )
                 parts.append(f"{how} JOIN {table_ref} ON {on_sql}")
             else:
@@ -302,8 +301,7 @@ class DataFrame:
 
         if self._group_by:
             cols = ", ".join(
-                c._expr if isinstance(c, Column) else str(c)
-                for c in self._group_by
+                c._expr if isinstance(c, Column) else str(c) for c in self._group_by
             )
             parts.append(f"GROUP BY {cols}")
 
@@ -312,8 +310,7 @@ class DataFrame:
 
         if self._order_by:
             cols = ", ".join(
-                c._expr if isinstance(c, Column) else str(c)
-                for c in self._order_by
+                c._expr if isinstance(c, Column) else str(c) for c in self._order_by
             )
             parts.append(f"ORDER BY {cols}")
 

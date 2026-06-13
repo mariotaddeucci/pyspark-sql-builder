@@ -23,8 +23,6 @@ def lead(column: Column | str, offset: int = 1, default: object = None) -> Colum
     return Column(f"LEAD({_to_expr(column)}, {offset}, {_to_expr(default)})")
 
 
-
-
 def col(name: str) -> Column:
     return Column(_quote_ident(name))
 
@@ -243,6 +241,3 @@ def substring(column: Column | str, pos: int, length: int | None = None) -> Colu
 
 def split(column: Column | str, pattern: str) -> Column:
     return Column(f"SPLIT({_to_expr(column)}, '{pattern}')")
-
-
-

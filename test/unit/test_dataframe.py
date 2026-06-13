@@ -28,20 +28,14 @@ def test_where_condition(spark: SparkSession) -> None:
 
 def test_multiple_where(spark: SparkSession) -> None:
     df = (
-        spark.table("users")
-        .where(F.col("age") > 18)
-        .where(F.col("status") == "active")
+        spark.table("users").where(F.col("age") > 18).where(F.col("status") == "active")
     )
     expected = "SELECT * FROM users WHERE `age` > 18 AND `status` = 'active'"
     assert df.generate_query() == expected
 
 
 def test_select_with_where(spark: SparkSession) -> None:
-    df = (
-        spark.table("users")
-        .select("id", "name", "age")
-        .where(F.col("age") >= 21)
-    )
+    df = spark.table("users").select("id", "name", "age").where(F.col("age") >= 21)
     expected = "SELECT `id`, `name`, `age` FROM users WHERE `age` >= 21"
     assert df.generate_query() == expected
 
@@ -77,9 +71,8 @@ def test_distinct(spark: SparkSession) -> None:
 
 
 def test_join_inner(spark: SparkSession) -> None:
-    df = (
-        spark.table("orders")
-        .join("customers", F.col("orders.customer_id") == F.col("customers.id"))
+    df = spark.table("orders").join(
+        "customers", F.col("orders.customer_id") == F.col("customers.id")
     )
     result = df.generate_query()
     assert "JOIN customers" in result
@@ -87,20 +80,14 @@ def test_join_inner(spark: SparkSession) -> None:
 
 
 def test_join_using(spark: SparkSession) -> None:
-    df = (
-        spark.table("employees")
-        .join("departments", ["dept_id"])
-    )
+    df = spark.table("employees").join("departments", ["dept_id"])
     result = df.generate_query()
     assert "JOIN departments USING" in result
     assert "`dept_id`" in result
 
 
 def test_join_using_multiple(spark: SparkSession) -> None:
-    df = (
-        spark.table("a")
-        .join("b", ["key1", "key2"])
-    )
+    df = spark.table("a").join("b", ["key1", "key2"])
     assert "USING (`key1`, `key2`)" in df.generate_query()
 
 
@@ -127,8 +114,10 @@ def test_aggregate(spark: SparkSession) -> None:
 
 
 def test_with_column(spark: SparkSession) -> None:
-    df = spark.table("users").select("id", "price").withColumn(
-        "total", F.col("price") * F.lit(1.1)
+    df = (
+        spark.table("users")
+        .select("id", "price")
+        .withColumn("total", F.col("price") * F.lit(1.1))
     )
     result = df.generate_query()
     assert "total" in result
@@ -189,9 +178,8 @@ def test_show(spark: SparkSession, capsys: pytest.CaptureFixture) -> None:
 
 
 def test_group_by_agg(spark: SparkSession) -> None:
-    df = (
-        spark.table("sales")
-        .select(F.col("category"), F.sum(F.col("amount")).alias("total"))
+    df = spark.table("sales").select(
+        F.col("category"), F.sum(F.col("amount")).alias("total")
     )
     grouped = df.groupBy("category")
     assert grouped is not None
