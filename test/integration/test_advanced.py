@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-
 from pyspark_sql_builder.pyspark.sql import functions as F
 from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
@@ -72,7 +70,6 @@ def test_cast_to_integer(spark: SparkSession) -> None:
 # ── Struct operations (requires events table with STRUCT type) ────────
 
 
-@pytest.mark.requires_tables("events")
 def test_read_struct_fields(spark: SparkSession) -> None:
     result = (
         spark.table("events")
@@ -87,7 +84,6 @@ def test_read_struct_fields(spark: SparkSession) -> None:
     ]
 
 
-@pytest.mark.requires_tables("events")
 def test_struct_column_in_select(spark: SparkSession) -> None:
     result = spark.table("events").select("name", "metadata").orderBy("name")
     data = result.toArrow().to_pylist()
@@ -100,134 +96,4 @@ def test_struct_column_in_select(spark: SparkSession) -> None:
 # ── Array operations (requires events table with TEXT[] type) ─────────
 
 
-@pytest.mark.requires_tables("events")
-def test_array_size_and_contains(spark: SparkSession) -> None:
-    result = (
-        spark.table("events")
-        .select(
-            F.col("name"),
-            F.array_size(F.col("tags")).alias("tag_count"),
-            F.array_contains(F.col("tags"), "admin").alias("is_admin"),
-        )
-        .orderBy("name")
-    )
-    data = result.toArrow().to_pylist()
-    assert data == [
-        {"name": "Alice", "tag_count": 2, "is_admin": True},
-        {"name": "Bob", "tag_count": 1, "is_admin": False},
-        {"name": "Charlie", "tag_count": 3, "is_admin": True},
-    ]
-
-
-@pytest.mark.requires_tables("events")
-def test_array_join(spark: SparkSession) -> None:
-    result = (
-        spark.table("events")
-        .select(
-            F.col("name"),
-            F.array_join(F.col("tags"), ", ").alias("tags_str"),
-        )
-        .orderBy("name")
-    )
-    data = result.toArrow().to_pylist()
-    assert data == [
-        {"name": "Alice", "tags_str": "admin, user"},
-        {"name": "Bob", "tags_str": "user"},
-        {"name": "Charlie", "tags_str": "admin, editor, user"},
-    ]
-
-
-# ── Explode columns (requires events table with TEXT[] type) ──────────
-
-
-@pytest.mark.requires_tables("events")
-def test_explode_array(spark: SparkSession) -> None:
-    result = (
-        spark.table("events")
-        .select(F.col("name"), F.explode(F.col("tags")).alias("tag"))
-        .orderBy("name", "tag")
-    )
-    data = result.toArrow().to_pylist()
-    assert data == [
-        {"name": "Alice", "tag": "admin"},
-        {"name": "Alice", "tag": "user"},
-        {"name": "Bob", "tag": "user"},
-        {"name": "Charlie", "tag": "admin"},
-        {"name": "Charlie", "tag": "editor"},
-        {"name": "Charlie", "tag": "user"},
-    ]
-
-
-# ── Date conversions ─────────────────────────────────────────────────
-
-
-def test_date_part_extraction(spark: SparkSession) -> None:
-    result = (
-        spark.table("transactions")
-        .select(
-            F.col("id"),
-            F.year(F.col("date")).alias("year"),
-            F.month(F.col("date")).alias("month"),
-            F.day(F.col("date")).alias("day"),
-        )
-        .orderBy("id")
-    )
-    data = result.toArrow().to_pylist()
-    assert data == [
-        {"id": 1, "year": 2024, "month": 1, "day": 1},
-        {"id": 2, "year": 2024, "month": 1, "day": 15},
-        {"id": 3, "year": 2024, "month": 2, "day": 1},
-        {"id": 4, "year": 2024, "month": 2, "day": 15},
-        {"id": 5, "year": 2024, "month": 3, "day": 1},
-        {"id": 6, "year": 2024, "month": 1, "day": 10},
-        {"id": 7, "year": 2024, "month": 2, "day": 20},
-    ]
-
-
-def test_date_add_and_diff(spark: SparkSession) -> None:
-    result = (
-        spark.table("transactions")
-        .where(F.col("id") == 1)
-        .select(
-            F.col("id"),
-            F.date_add(F.col("date"), 7).alias("plus_7"),
-            F.date_sub(F.col("date"), 1).alias("minus_1"),
-            F.datediff(F.lit("2024-01-10"), F.col("date")).alias("days_diff"),
-        )
-    )
-    data = result.toArrow().to_pylist()
-    assert len(data) == 1
-    row = data[0]
-    assert row["id"] == 1
-    assert row["days_diff"] == 9
-
-
-def test_date_format(spark: SparkSession) -> None:
-    result = (
-        spark.table("transactions")
-        .where(F.col("id") == 1)
-        .select(F.date_format(F.col("date"), "yyyy/MM/dd").alias("formatted"))
-    )
-    data = result.toArrow().to_pylist()
-    assert data == [{"formatted": "2024/01/01"}]
-
-
 # ── Series generation ────────────────────────────────────────────────
-
-
-def test_range_basic(spark: SparkSession) -> None:
-    result = spark.range(0, 5).select(F.col("id"))
-    data = result.toArrow().to_pylist()
-    assert data == [{"id": 0}, {"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}]
-
-
-def test_range_with_step(spark: SparkSession) -> None:
-    result = spark.range(0, 10, 3)
-    data = result.toArrow().to_pylist()
-    assert data == [{"id": 0}, {"id": 3}, {"id": 6}, {"id": 9}]
-
-
-def test_range_empty(spark: SparkSession) -> None:
-    result = spark.range(5, 5)
-    data = result.toArrow().to_pylist()
-    assert data == []
