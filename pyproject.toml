@@ -20,9 +20,6 @@ requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.pytest.ini_options]
-markers = [
-    "requires_tables(table1, table2, ...): skip if the required tables are not defined in the dialect's asset SQL file",
-]
 
 [dependency-groups]
 dev = [

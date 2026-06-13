@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from collections.abc import Generator
 from pathlib import Path
 
@@ -8,17 +7,6 @@ import pytest
 
 from pyspark_sql_builder.pyspark.exceptions import AnalysisExceptionError
 from pyspark_sql_builder.pyspark.sql.session import SparkSession
-
-_CREATE_TABLE_RE = re.compile(
-    r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)", re.IGNORECASE
-)
-
-
-def _tables_in_asset(dialect: str) -> set[str]:
-    path = Path(__file__).parent / "assets" / f"{dialect}.sql"
-    if not path.exists():
-        return set()
-    return set(_CREATE_TABLE_RE.findall(path.read_text()))
 
 
 @pytest.fixture(

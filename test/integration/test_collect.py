@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
-
 from pyspark_sql_builder.pyspark.sql.session import SparkSession
 from pyspark_sql_builder.pyspark.sql.types import Row
 
 
-@pytest.mark.requires_tables("transactions")
 def test_collect_multiple_rows(spark: SparkSession) -> None:
     """Test collect() with multiple rows from actual table."""
     df = spark.table("transactions").limit(3)
@@ -19,7 +16,6 @@ def test_collect_multiple_rows(spark: SparkSession) -> None:
     assert "amount" in rows[0].asDict()
 
 
-@pytest.mark.requires_tables("transactions")
 def test_collect_row_access_by_name(spark: SparkSession) -> None:
     """Test accessing Row values by column name."""
     df = spark.table("transactions").limit(1)
@@ -29,7 +25,6 @@ def test_collect_row_access_by_name(spark: SparkSession) -> None:
     assert row["amount"] is not None
 
 
-@pytest.mark.requires_tables("transactions")
 def test_collect_row_access_by_attribute(spark: SparkSession) -> None:
     """Test accessing Row values by attribute name."""
     df = spark.table("transactions").limit(1)
@@ -101,7 +96,6 @@ def test_collect_with_select_and_filter(spark: SparkSession) -> None:
     assert rows[0]["name"] == "Alice"
 
 
-@pytest.mark.requires_tables("transactions")
 def test_collect_after_groupby(spark: SparkSession) -> None:
     """Test collect() after groupBy aggregation."""
     from pyspark_sql_builder.pyspark.sql import functions as F

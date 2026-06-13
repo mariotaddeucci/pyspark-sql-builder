@@ -14,20 +14,6 @@ Tests are **automatically skipped** when they try to access non-existent tables:
 4. The `spark` fixture catches this exception and converts it to `pytest.skip()`
 5. Test is skipped **on that dialect only** — other dialects still run
 
-### Optional: Marker Hint (for Documentation)
-
-You can still use `@pytest.mark.requires_tables("table1", "table2")` as **documentation** to indicate which tables a test needs, but it's not required for the skip mechanism:
-
-```python
-@pytest.mark.requires_tables("users", "transactions")
-def test_something(spark: SparkSession) -> None:
-    result = spark.table("users").select(...).orderBy(...)
-    data = result.toArrow().to_pylist()
-    # If users or transactions don't exist:
-    # - toArrow() raises AnalysisException
-    # - fixture catches it and pytest.skip()
-```
-
 ## Principle
 
 Every integration test must verify that for **each engine** the test runs on, the query result — materialised as a `pyarrow.Table` via `df.toArrow()` → `to_pylist()` — returns **identical data**. This guarantees cross-engine consistency of the generated SQL.
