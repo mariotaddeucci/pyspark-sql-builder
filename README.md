@@ -28,7 +28,7 @@ spark = SparkSession.builder.getOrCreate()
 
 df = (
     spark.table("orders")
-    .join("customers", F.col("orders.customer_id") == F.col("customers.id"))
+    .join("customers", ["customer_id"])
     .select("orders.id", "customers.name", "orders.amount")
     .where(F.col("orders.amount") > 100)
     .orderBy(F.col("orders.amount").desc())
@@ -44,14 +44,12 @@ print(df.generate_query("postgres"))
 print(df.generate_query("bigquery"))
 ```
 
-## Example
+## Examples
+
+### Aggregation with filtering
 
 ```python
-from pyspark_sql_builder import SparkSession, functions as F
-
 spark = SparkSession(dialect="duckdb")
-
-# Aggregation with filtering
 result = (
     spark.table("sales")
     .select(F.col("category"), F.sum(F.col("amount")).alias("total"))
@@ -59,11 +57,8 @@ result = (
     .having(F.sum(F.col("amount")) > 1000)
     .orderBy(F.col("total").desc())
 )
-
 print(result.generate_query())
 ```
-
-Output:
 
 ```sql
 SELECT category, SUM(amount) AS total
@@ -73,28 +68,84 @@ HAVING SUM(amount) > 1000
 ORDER BY total DESC
 ```
 
+### Window functions
+
+```python
+from pyspark_sql_builder import Window
+
+w = Window.partitionBy("department").orderBy(F.col("salary").desc())
+df = (
+    spark.table("employees")
+    .select(
+        "name",
+        "department",
+        "salary",
+        F.row_number().over(w).alias("rank"),
+    )
+)
+print(df.generate_query())
+```
+
+### CASE / WHEN
+
+```python
+df = spark.table("orders").select(
+    F.col("amount"),
+    F.when(F.col("amount") > 100, "high")
+     .when(F.col("amount") > 50, "medium")
+     .otherwise("low")
+     .alias("tier"),
+)
+print(df.generate_query())
+```
+
+### Join with USING
+
+```python
+df = spark.table("employees").join("departments", ["dept_id"])
+print(df.generate_query())
+# SELECT ... FROM employees JOIN departments USING (dept_id)
+```
+
 ## API
 
-The API mirrors PySpark's `DataFrame`, `Column`, and `functions` modules:
+The API mirrors PySpark's `DataFrame`, `Column`, `Window`, and `functions` modules:
 
-| PySpark | This project |
-|---|---|
-| `spark.table(...)` | `SparkSession.table(...)` |
-| `df.select(...)` | `DataFrame.select(...)` |
-| `df.where(...)` | `DataFrame.where(...)` |
-| `df.join(...)` | `DataFrame.join(...)` |
-| `df.groupBy(...)` | `DataFrame.groupBy(...)` |
-| `df.orderBy(...)` | `DataFrame.orderBy(...)` |
-| `df.agg(...)` | `DataFrame.agg(...)` |
-| `F.col(...)` | `functions.col(...)` |
-| `F.lit(...)` | `functions.lit(...)` |
-| `F.count(...)` | `functions.count(...)` |
+| Category | PySpark | This project |
+|---|---|---|
+| Session | `spark.table(...)` | `SparkSession.table(...)` |
+| Transformations | `df.select(...)` | `DataFrame.select(...)` |
+| | `df.selectExpr(...)` | `DataFrame.selectExpr(...)` |
+| | `df.where(...)` / `df.filter(...)` | `DataFrame.where(...)` / `filter(...)` |
+| | `df.withColumn(...)` | `DataFrame.withColumn(...)` |
+| | `df.withColumnRenamed(...)` | `DataFrame.withColumnRenamed(...)` |
+| | `df.drop(...)` | `DataFrame.drop(...)` |
+| | `df.distinct(...)` | `DataFrame.distinct(...)` |
+| Joins | `df.join(other, on)` | `DataFrame.join(...)` |
+| | `df.join(other, ["key"])` | `DataFrame.join(..., ["key"])` (USING) |
+| Grouping | `df.groupBy(...)` | `DataFrame.groupBy(...)` |
+| | `df.agg(...)` | `DataFrame.agg(...)` |
+| | `df.having(...)` | `DataFrame.having(...)` |
+| Ordering | `df.orderBy(...)` | `DataFrame.orderBy(...)` |
+| Window | `Window.partitionBy(...)` | `Window.partitionBy(...)` |
+| | `Window.partitionBy(...).orderBy(...)` | `Window.partitionBy(...).orderBy(...)` |
+| Functions | `F.col(...)` | `functions.col(...)` |
+| | `F.lit(...)` | `functions.lit(...)` |
+| | `F.count(...)`, `F.sum(...)`, `F.avg(...)` | `functions.count/sum/avg/min/max(...)` |
+| | `F.when(...).otherwise(...)` | `functions.when(...).otherwise(...)` |
+| | `F.row_number()`, `F.rank()` | `functions.row_number/rank/dense_rank(...)` |
+| | `F.lag(...)`, `F.lead(...)` | `functions.lag/lead(...)` |
+| Output | `df.collect()` / `df.show()` | `df.generate_query(dialect)` |
 
 ### `generate_query(dialect=None)`
 
-The central method. Returns the SQL string for the given dialect. If `dialect` is `None`, uses the session's default dialect.
+The central output method. Returns the SQL string for the given dialect. If `dialect` is `None`, uses the session's default dialect.
 
 Supported dialects include: `spark`, `duckdb`, `postgres`, `bigquery`, `snowflake`, `mysql`, `sqlite`, `clickhouse`, `databricks`, `presto`, `trino`, and 20+ more.
+
+## How it works
+
+The builder constructs SQL strings from PySpark-style method calls. All identifiers are auto-quoted with backticks to handle reserved words and special characters. When `generate_query(dialect)` is called, if a dialect different from `spark` is requested, the SQL is transpiled via [polyglot-sql](https://pypi.org/project/polyglot-sql/) — a Rust-powered SQL transpiler supporting 32+ dialects.
 
 ## Development
 
@@ -102,19 +153,22 @@ Supported dialects include: `spark`, `duckdb`, `postgres`, `bigquery`, `snowflak
 # Setup
 uv sync
 
+# Install git hooks (ruff fix → ruff format → pyrefly check)
+prek install
+
+# Run all checks
+prek run --all-files
+
 # Run tests
 uv run pytest
 
 # Type check
-uv run pyright
+uv run pyrefly check src/
 
-# Lint
+# Lint & format
 uv run ruff check
+uv run ruff format
 ```
-
-## How it works
-
-The builder constructs SQL strings from PySpark-style method calls. When `generate_query(dialect)` is called, if a dialect different from `spark` is requested, the SQL is transpiled via [polyglot-sql](https://pypi.org/project/polyglot-sql/) — a Rust-powered SQL transpiler supporting 32+ dialects.
 
 ## License
 
