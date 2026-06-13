@@ -8,6 +8,7 @@ import pyarrow as pa
 from pyspark_sql_builder.pyspark.sql.column import Column, _quote_ident
 from pyspark_sql_builder.pyspark.sql.group import GroupedData
 from pyspark_sql_builder.pyspark.sql.types import (
+    Row,
     StructType,
     _arrow_schema_to_struct_type,
     _arrow_to_dtype_string,
@@ -228,3 +229,36 @@ class DataFrame:
 
     def copy(self) -> DataFrame:
         return DataFrame(self._query, self._session)
+
+    def collect(self) -> list[Row]:
+        """Collect all rows of the DataFrame and return them as a list of Row objects.
+
+        Processes data in chunks (record batches) to minimize memory usage and avoid
+        materializing the entire dataset at once.
+
+        Returns:
+            List of Row objects, one for each row in the DataFrame.
+
+        Example:
+            >>> df = spark.range(10).select("id")
+            >>> rows = df.collect()
+            >>> rows[0]["id"]
+            0
+        """
+        query = self.generate_query()
+        session = self._session
+        # Verify that all tables referenced in the query exist
+        session.catalog.verify_tables_exist(query)
+        reader = session._get_driver().query(query)
+
+        rows = []
+        # Process each record batch without materializing the full table
+        for record_batch in reader:
+            schema_names = record_batch.schema.names
+            for i in range(record_batch.num_rows):
+                row_data = {}
+                for col_name, col_data in zip(schema_names, record_batch.columns):
+                    value = col_data[i].as_py()
+                    row_data[col_name] = value
+                rows.append(Row(**row_data))
+        return rows

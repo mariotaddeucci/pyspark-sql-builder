@@ -1,7 +1,116 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
+from typing import Any
+
 import pyarrow as pa
 import pyarrow.types as pat
+
+
+class Row:
+    """Represents a row in a DataFrame.
+
+    A Row object is immutable and acts like a named tuple, allowing access
+    to values by column name (as attribute) or by index/column name (as item).
+
+    Example:
+        >>> row = Row(name="Alice", age=30)
+        >>> row.name
+        'Alice'
+        >>> row["name"]
+        'Alice'
+        >>> row[0]
+        'Alice'
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize a Row.
+
+        Args:
+            *args: Positional values (stored by index)
+            **kwargs: Named values (accessed by name)
+        """
+        if args and kwargs:
+            raise ValueError("Cannot specify both positional and keyword arguments")
+
+        if args:
+            self._values = args
+            self._fields = tuple(f"_{i}" for i in range(len(args)))
+        else:
+            self._fields = tuple(sorted(kwargs.keys()))
+            self._values = tuple(kwargs[k] for k in self._fields)
+
+    def __getitem__(self, key: int | str) -> Any:
+        """Access value by index or field name."""
+        if isinstance(key, int):
+            return self._values[key]
+        if isinstance(key, str):
+            try:
+                idx = self._fields.index(key)
+                return self._values[idx]
+            except ValueError:
+                raise KeyError(f"Column '{key}' not found in Row")
+        raise TypeError(
+            f"indices must be integers or strings, not {type(key).__name__}"
+        )
+
+    def __getattr__(self, name: str) -> Any:
+        """Access value by attribute name."""
+        if name.startswith("_"):
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
+        try:
+            idx = self._fields.index(name)
+            return self._values[idx]
+        except ValueError:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
+
+    def __repr__(self) -> str:
+        if self._fields and not all(f.startswith("_") for f in self._fields):
+            items = ", ".join(f"{k}={v!r}" for k, v in zip(self._fields, self._values))
+            return f"Row({items})"
+        return f"Row({', '.join(repr(v) for v in self._values)})"
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Row):
+            return NotImplemented
+        return self._values == other._values and self._fields == other._fields
+
+    def __hash__(self) -> int:
+        return hash((self._values, self._fields))
+
+    def __len__(self) -> int:
+        """Return the number of fields in the Row."""
+        return len(self._values)
+
+    def __iter__(self) -> Iterator[Any]:
+        """Iterate over values in the Row."""
+        return iter(self._values)
+
+    def asDict(self, recursive: bool = False) -> dict[str, Any]:  # noqa: N802
+        """Convert Row to a dictionary.
+
+        Args:
+            recursive: If True, recursively convert nested Rows to dicts.
+
+        Returns:
+            Dictionary representation of the Row.
+        """
+        result: dict[str, Any] = {}
+        for k, v in zip(self._fields, self._values):
+            if recursive and isinstance(v, Row):
+                result[k] = v.asDict(recursive=True)
+            elif recursive and isinstance(v, (list, tuple)):
+                result[k] = [
+                    item.asDict(recursive=True) if isinstance(item, Row) else item
+                    for item in v
+                ]
+            else:
+                result[k] = v
+        return result
 
 
 class DataType:

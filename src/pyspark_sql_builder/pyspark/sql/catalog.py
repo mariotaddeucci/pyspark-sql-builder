@@ -6,34 +6,15 @@ See: https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/p
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from polyglot_sql import Table, parse_one
 
 from pyspark_sql_builder.pyspark.exceptions import AnalysisExceptionError
+from pyspark_sql_builder.pyspark.sql.types import Row
 
 if TYPE_CHECKING:
     from pyspark_sql_builder.pyspark.sql.session import SparkSession
-
-
-class Row(dict):
-    """A row in a result set.
-
-    Behaves like a dictionary but allows attribute access to fields.
-    Example: row['name'] or row.name both work.
-    """
-
-    def __getattr__(self, key: str) -> Any:
-        try:
-            return self[key]
-        except KeyError as e:
-            raise AttributeError(f"No attribute {key}") from e
-
-    def __setattr__(self, key: str, value: Any) -> None:
-        self[key] = value
-
-    def __repr__(self) -> str:
-        return f"Row({dict.__repr__(self)})"
 
 
 class Catalog:
