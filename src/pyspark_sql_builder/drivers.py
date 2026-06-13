@@ -18,9 +18,6 @@ class DatabaseDriver(ABC):
     @abstractmethod
     def query(self, query: str) -> pa.RecordBatchReader: ...
 
-    def toArrow(self, query: str) -> pa.Table:
-        return self.query(query).read_all()
-
 
 class DuckDBDriver(DatabaseDriver):
     def __init__(self, connection: duckdb.DuckDBPyConnection) -> None:

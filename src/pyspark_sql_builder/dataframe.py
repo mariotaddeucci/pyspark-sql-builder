@@ -181,7 +181,8 @@ class DataFrame:
     def toArrow(self) -> pa.Table:
         query = self.generate_query()
         session = self._session
-        return session._get_driver().toArrow(query)
+        reader = session._get_driver().query(query)
+        return reader.read_all()
 
     def toPandas(self):
         return self.toArrow().to_pandas()
