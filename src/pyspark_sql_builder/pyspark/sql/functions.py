@@ -570,9 +570,7 @@ def uniform(low: int | float, high: int | float, seed: int | None = None) -> Col
     return Column(f"UNIFORM({low}, {high})")
 
 
-def width_bucket(
-    col: Column | str, min_value: object, max_value: object, nBuckets: object
-) -> Column:  # noqa: E501
+def width_bucket(col: Column | str, min_value: object, max_value: object, nBuckets: object) -> Column:  # noqa: E501
     return Column(
         f"WIDTH_BUCKET({_to_expr(_to_col(col))}, {_to_expr(min_value)}, {_to_expr(max_value)}, {_to_expr(nBuckets)})"  # noqa: E501
     )  # noqa: E501
@@ -645,9 +643,7 @@ def endswith(col: Column | str, suffix: object) -> Column:
 
 
 def find_in_set(str_val: Column | str, str_array: Column | str) -> Column:
-    return Column(
-        f"FIND_IN_SET({_to_expr(_to_col(str_val))}, {_to_expr(_to_col(str_array))})"
-    )  # noqa: E501
+    return Column(f"FIND_IN_SET({_to_expr(_to_col(str_val))}, {_to_expr(_to_col(str_array))})")  # noqa: E501
 
 
 def format_string(format_str: str, *args: object) -> Column:
@@ -703,9 +699,7 @@ def octet_length(col: Column | str) -> Column:
     return Column(f"OCTET_LENGTH({_to_expr(_to_col(col))})")
 
 
-def overlay(
-    col: Column | str, replace: str, pos: int, length: int | None = None
-) -> Column:  # noqa: E501
+def overlay(col: Column | str, replace: str, pos: int, length: int | None = None) -> Column:  # noqa: E501
     expr = _to_expr(_to_col(col))
     if length is not None:
         return Column(f"OVERLAY({expr} PLACING '{replace}' FROM {pos} FOR {length})")
@@ -748,9 +742,7 @@ def regexp_instr(col: Column | str, regex: str) -> Column:
 
 
 def regexp_replace(col: Column | str, regex: str, repl: str, pos: int = 1) -> Column:
-    return Column(
-        f"REGEXP_REPLACE({_to_expr(_to_col(col))}, '{regex}', '{repl}', {pos})"
-    )  # noqa: E501
+    return Column(f"REGEXP_REPLACE({_to_expr(_to_col(col))}, '{regex}', '{repl}', {pos})")  # noqa: E501
 
 
 def regexp_substr(col: Column | str, regex: str) -> Column:
@@ -769,9 +761,7 @@ def rpad(col: Column | str, length: int, pad: str) -> Column:
     return Column(f"RPAD({_to_expr(_to_col(col))}, {length}, '{pad}')")
 
 
-def sentences(
-    col: Column | str, lang: str | None = None, country: str | None = None
-) -> Column:  # noqa: E501
+def sentences(col: Column | str, lang: str | None = None, country: str | None = None) -> Column:  # noqa: E501
     expr = _to_expr(_to_col(col))
     if lang is not None and country is not None:
         return Column(f"SENTENCES({expr}, '{lang}', '{country}')")
@@ -931,9 +921,7 @@ def localtimestamp() -> Column:
     return Column("LOCALTIMESTAMP")
 
 
-def make_date(
-    y: Column | int | str, m: Column | int | str, d: Column | int | str
-) -> Column:  # noqa: E501
+def make_date(y: Column | int | str, m: Column | int | str, d: Column | int | str) -> Column:  # noqa: E501
     def _to_col_lit(v: Column | int | str) -> str:
         if isinstance(v, str):
             return _to_expr(_to_col(v))
@@ -942,9 +930,7 @@ def make_date(
     return Column(f"MAKE_DATE({_to_col_lit(y)}, {_to_col_lit(m)}, {_to_col_lit(d)})")
 
 
-def make_dt_interval(
-    days: int = 0, hours: int = 0, mins: int = 0, secs: int = 0
-) -> Column:  # noqa: E501
+def make_dt_interval(days: int = 0, hours: int = 0, mins: int = 0, secs: int = 0) -> Column:  # noqa: E501
     return Column(f"MAKE_DT_INTERVAL({days}, {hours}, {mins}, {secs})")
 
 
@@ -957,14 +943,10 @@ def make_interval(
     mins: int = 0,
     secs: int = 0,
 ) -> Column:  # noqa: E501
-    return Column(
-        f"MAKE_INTERVAL({years}, {months}, {weeks}, {days}, {hours}, {mins}, {secs})"
-    )  # noqa: E501
+    return Column(f"MAKE_INTERVAL({years}, {months}, {weeks}, {days}, {hours}, {mins}, {secs})")  # noqa: E501
 
 
-def make_time(
-    h: Column | int | str, m: Column | int | str, s: Column | int | str
-) -> Column:  # noqa: E501
+def make_time(h: Column | int | str, m: Column | int | str, s: Column | int | str) -> Column:  # noqa: E501
     def _to_col_lit(v: Column | int | str) -> str:
         if isinstance(v, str):
             return _to_expr(_to_col(v))
@@ -1045,9 +1027,7 @@ def monthname(col: Column | str) -> Column:
     return Column(f"MONTHNAME({_to_expr(_to_col(col))})")
 
 
-def months_between(
-    col1: Column | str, col2: Column | str, roundOff: bool | None = None
-) -> Column:  # noqa: E501
+def months_between(col1: Column | str, col2: Column | str, roundOff: bool | None = None) -> Column:  # noqa: E501
     args = f"{_to_expr(_to_col(col1))}, {_to_expr(_to_col(col2))}"
     if roundOff is not None:
         args = f"{args}, {_to_expr(roundOff)}"
@@ -1075,9 +1055,7 @@ def timestamp_add(col: Column | str, n: int) -> Column:
 
 
 def timestamp_diff(unit: str, start: Column | str, end: Column | str) -> Column:
-    return Column(
-        f"TIMESTAMPDIFF({unit}, {_to_expr(_to_col(start))}, {_to_expr(_to_col(end))})"
-    )  # noqa: E501
+    return Column(f"TIMESTAMPDIFF({unit}, {_to_expr(_to_col(start))}, {_to_expr(_to_col(end))})")  # noqa: E501
 
 
 def timestamp_micros(col: Column | str) -> Column:
@@ -1093,9 +1071,7 @@ def timestamp_seconds(col: Column | str) -> Column:
 
 
 def time_diff(unit: str, start: Column | str, end: Column | str) -> Column:
-    return Column(
-        f"TIME_DIFF({unit}, {_to_expr(_to_col(start))}, {_to_expr(_to_col(end))})"
-    )  # noqa: E501
+    return Column(f"TIME_DIFF({unit}, {_to_expr(_to_col(start))}, {_to_expr(_to_col(end))})")  # noqa: E501
 
 
 def time_trunc(fmt: str, col: Column | str) -> Column:
@@ -1352,9 +1328,7 @@ def approx_count_distinct(column: Column | str, rsd: float | None = None) -> Col
     return Column(f"APPROX_COUNT_DISTINCT({expr})")
 
 
-def approx_percentile(
-    column: Column | str, percentage: object, accuracy: int | None = None
-) -> Column:  # noqa: E501
+def approx_percentile(column: Column | str, percentage: object, accuracy: int | None = None) -> Column:  # noqa: E501
     expr = _to_expr(_to_col(column))
     if accuracy is not None:
         return Column(f"APPROX_PERCENTILE({expr}, {_to_expr(percentage)}, {accuracy})")
@@ -1414,9 +1388,7 @@ def count_if(column: Column | str) -> Column:
     return Column(f"COUNT_IF({_to_expr(_to_col(column))})")
 
 
-def count_min_sketch(
-    column: Column | str, eps: object, conf: object, seed: object
-) -> Column:  # noqa: E501
+def count_min_sketch(column: Column | str, eps: object, conf: object, seed: object) -> Column:  # noqa: E501
     raise NotImplementedError("count_min_sketch is not supported in SQL mode")
 
 
@@ -1466,9 +1438,7 @@ def hll_sketch_agg(column: Column | str, lg_config_k: int | None = None) -> Colu
     return Column(f"HLL_SKETCH_AGG({expr})")
 
 
-def hll_union_agg(
-    column: Column | str, allow_different_lg_config_k: bool | None = None
-) -> Column:  # noqa: E501
+def hll_union_agg(column: Column | str, allow_different_lg_config_k: bool | None = None) -> Column:  # noqa: E501
     expr = _to_expr(_to_col(column))
     if allow_different_lg_config_k is not None:
         return Column(f"HLL_UNION_AGG({expr}, {_to_expr(allow_different_lg_config_k)})")
@@ -1521,9 +1491,7 @@ def mode(column: Column | str) -> Column:
     return Column(f"MODE({_to_expr(_to_col(column))})")
 
 
-def percentile(
-    column: Column | str, percentage: object, frequency: Column | str | None = None
-) -> Column:  # noqa: E501
+def percentile(column: Column | str, percentage: object, frequency: Column | str | None = None) -> Column:  # noqa: E501
     expr = _to_expr(_to_col(column))
     pct = _to_expr(percentage)
     if frequency is not None:
@@ -1531,9 +1499,7 @@ def percentile(
     return Column(f"PERCENTILE({expr}, {pct})")
 
 
-def percentile_approx(
-    column: Column | str, percentage: object, accuracy: int | None = None
-) -> Column:  # noqa: E501
+def percentile_approx(column: Column | str, percentage: object, accuracy: int | None = None) -> Column:  # noqa: E501
     expr = _to_expr(_to_col(column))
     pct = _to_expr(percentage)
     if accuracy is not None:
@@ -1558,9 +1524,7 @@ def regr_count(col1: Column | str, col2: Column | str) -> Column:
 
 
 def regr_intercept(col1: Column | str, col2: Column | str) -> Column:
-    return Column(
-        f"REGR_INTERCEPT({_to_expr(_to_col(col1))}, {_to_expr(_to_col(col2))})"
-    )  # noqa: E501
+    return Column(f"REGR_INTERCEPT({_to_expr(_to_col(col1))}, {_to_expr(_to_col(col2))})")  # noqa: E501
 
 
 def regr_r2(col1: Column | str, col2: Column | str) -> Column:
@@ -1722,9 +1686,7 @@ def map_entries(map_col: Column | str) -> Column:
 
 
 def map_from_arrays(keys: Column | str, vals: Column | str) -> Column:
-    return Column(
-        f"MAP_FROM_ARRAYS({_to_expr(_to_col(keys))}, {_to_expr(_to_col(vals))})"
-    )  # noqa: E501
+    return Column(f"MAP_FROM_ARRAYS({_to_expr(_to_col(keys))}, {_to_expr(_to_col(vals))})")  # noqa: E501
 
 
 def map_from_entries(entries: Column | str) -> Column:
@@ -1739,9 +1701,7 @@ def map_values(map_col: Column | str) -> Column:
     return Column(f"MAP_VALUES({_to_expr(_to_col(map_col))})")
 
 
-def str_to_map(
-    str_col: Column | str, delim: str | None = None, pair_delim: str | None = None
-) -> Column:  # noqa: E501
+def str_to_map(str_col: Column | str, delim: str | None = None, pair_delim: str | None = None) -> Column:  # noqa: E501
     expr = _to_expr(_to_col(str_col))
     if delim is not None and pair_delim is not None:
         return Column(f"STR_TO_MAP({expr}, {_to_expr(delim)}, {_to_expr(pair_delim)})")
@@ -1780,15 +1740,11 @@ def array_except(col1: Column | str, col2: Column | str) -> Column:
 
 
 def array_insert(col: Column | str, idx: object, val: object) -> Column:
-    return Column(
-        f"ARRAY_INSERT({_to_expr(_to_col(col))}, {_to_expr(idx)}, {_to_expr(val)})"
-    )  # noqa: E501
+    return Column(f"ARRAY_INSERT({_to_expr(_to_col(col))}, {_to_expr(idx)}, {_to_expr(val)})")  # noqa: E501
 
 
 def array_intersect(col1: Column | str, col2: Column | str) -> Column:
-    return Column(
-        f"ARRAY_INTERSECT({_to_expr(_to_col(col1))}, {_to_expr(_to_col(col2))})"
-    )  # noqa: E501
+    return Column(f"ARRAY_INTERSECT({_to_expr(_to_col(col1))}, {_to_expr(_to_col(col2))})")  # noqa: E501
 
 
 def array_join(col: Column | str, sep: str, null_repl: str | None = None) -> Column:
@@ -1836,25 +1792,19 @@ def array_union(col1: Column | str, col2: Column | str) -> Column:
 
 
 def arrays_overlap(col1: Column | str, col2: Column | str) -> Column:
-    return Column(
-        f"ARRAYS_OVERLAP({_to_expr(_to_col(col1))}, {_to_expr(_to_col(col2))})"
-    )  # noqa: E501
+    return Column(f"ARRAYS_OVERLAP({_to_expr(_to_col(col1))}, {_to_expr(_to_col(col2))})")  # noqa: E501
 
 
 def arrays_zip(*cols: Column | str) -> Column:
     return Column(f"ARRAYS_ZIP({', '.join(_to_expr(_to_col(c)) for c in cols)})")
 
 
-def aggregate(
-    expr: Column | str, init: Column | str, merge: str, finish: str | None = None
-) -> Column:  # noqa: E501
+def aggregate(expr: Column | str, init: Column | str, merge: str, finish: str | None = None) -> Column:  # noqa: E501
     if finish is not None:
         return Column(
             f"AGGREGATE({_to_expr(_to_col(expr))}, {_to_expr(_to_col(init))}, {merge}, {finish})"  # noqa: E501
         )  # noqa: E501
-    return Column(
-        f"AGGREGATE({_to_expr(_to_col(expr))}, {_to_expr(_to_col(init))}, {merge})"
-    )  # noqa: E501
+    return Column(f"AGGREGATE({_to_expr(_to_col(expr))}, {_to_expr(_to_col(init))}, {merge})")  # noqa: E501
 
 
 def cardinality(expr: Column | str) -> Column:
@@ -1890,26 +1840,18 @@ def map_filter(expr: Column | str, func: str) -> Column:
 
 
 def map_zip_with(map1: Column | str, map2: Column | str, func: str) -> Column:
-    return Column(
-        f"MAP_ZIP_WITH({_to_expr(_to_col(map1))}, {_to_expr(_to_col(map2))}, {func})"
-    )  # noqa: E501
+    return Column(f"MAP_ZIP_WITH({_to_expr(_to_col(map1))}, {_to_expr(_to_col(map2))}, {func})")  # noqa: E501
 
 
-def reduce(
-    expr: Column | str, init: Column | str, merge: str, finish: str | None = None
-) -> Column:  # noqa: E501
+def reduce(expr: Column | str, init: Column | str, merge: str, finish: str | None = None) -> Column:  # noqa: E501
     if finish is not None:
         return Column(
             f"REDUCE({_to_expr(_to_col(expr))}, {_to_expr(_to_col(init))}, {merge}, {finish})"  # noqa: E501
         )  # noqa: E501
-    return Column(
-        f"REDUCE({_to_expr(_to_col(expr))}, {_to_expr(_to_col(init))}, {merge})"
-    )  # noqa: E501
+    return Column(f"REDUCE({_to_expr(_to_col(expr))}, {_to_expr(_to_col(init))}, {merge})")  # noqa: E501
 
 
-def sequence(
-    start: Column | str, stop: Column | str, step: Column | str | None = None
-) -> Column:  # noqa: E501
+def sequence(start: Column | str, stop: Column | str, step: Column | str | None = None) -> Column:  # noqa: E501
     if step is not None:
         return Column(
             f"SEQUENCE({_to_expr(_to_col(start))}, {_to_expr(_to_col(stop))}, {_to_expr(_to_col(step))})"  # noqa: E501
@@ -1926,9 +1868,7 @@ def size(col: Column | str) -> Column:
 
 
 def slice(col: Column | str, start: object, len: object) -> Column:
-    return Column(
-        f"SLICE({_to_expr(_to_col(col))}, {_to_expr(start)}, {_to_expr(len)})"
-    )  # noqa: E501
+    return Column(f"SLICE({_to_expr(_to_col(col))}, {_to_expr(start)}, {_to_expr(len)})")  # noqa: E501
 
 
 def sort_array(col: Column | str, asc: bool = True) -> Column:
@@ -1955,9 +1895,7 @@ def try_element_at(col: Column | str, idx: object) -> Column:
 
 
 def zip_with(left: Column | str, right: Column | str, func: str) -> Column:
-    return Column(
-        f"ZIP_WITH({_to_expr(_to_col(left))}, {_to_expr(_to_col(right))}, {func})"
-    )  # noqa: E501
+    return Column(f"ZIP_WITH({_to_expr(_to_col(left))}, {_to_expr(_to_col(right))}, {func})")  # noqa: E501
 
 
 # ── CSV / JSON functions ────────────────────────────────────────────────
@@ -2013,25 +1951,17 @@ def to_json(col: Column | str, options: dict | None = None) -> Column:
 # ── URL functions ───────────────────────────────────────────────────────
 
 
-def parse_url(
-    url: Column | str, part_to_extract: str, key: str | None = None
-) -> Column:  # noqa: E501
+def parse_url(url: Column | str, part_to_extract: str, key: str | None = None) -> Column:  # noqa: E501
     expr = _to_expr(_to_col(url))
     if key is not None:
-        return Column(
-            f"PARSE_URL({expr}, {_to_expr(part_to_extract)}, {_to_expr(key)})"
-        )  # noqa: E501
+        return Column(f"PARSE_URL({expr}, {_to_expr(part_to_extract)}, {_to_expr(key)})")  # noqa: E501
     return Column(f"PARSE_URL({expr}, {_to_expr(part_to_extract)})")
 
 
-def try_parse_url(
-    url: Column | str, part_to_extract: str, key: str | None = None
-) -> Column:  # noqa: E501
+def try_parse_url(url: Column | str, part_to_extract: str, key: str | None = None) -> Column:  # noqa: E501
     expr = _to_expr(_to_col(url))
     if key is not None:
-        return Column(
-            f"TRY_PARSE_URL({expr}, {_to_expr(part_to_extract)}, {_to_expr(key)})"
-        )  # noqa: E501
+        return Column(f"TRY_PARSE_URL({expr}, {_to_expr(part_to_extract)}, {_to_expr(key)})")  # noqa: E501
     return Column(f"TRY_PARSE_URL({expr}, {_to_expr(part_to_extract)})")
 
 
@@ -2153,9 +2083,7 @@ def version() -> Column:
     return Column("VERSION()")
 
 
-def try_aes_decrypt(
-    col: Column | str, key: str, *args: object, **kwargs: object
-) -> Column:  # noqa: E501
+def try_aes_decrypt(col: Column | str, key: str, *args: object, **kwargs: object) -> Column:  # noqa: E501
     return Column(f"TRY_AES_DECRYPT({_to_expr(_to_col(col))}, {_to_expr(key)})")
 
 
@@ -2212,9 +2140,7 @@ def try_variant_get(col: Column | str, path: str, type_str: str) -> Column:
 
 
 def variant_get(col: Column | str, path: str, type_str: str) -> Column:
-    return Column(
-        f"VARIANT_GET({_to_expr(_to_col(col))}, {_to_expr(path)}, {_to_expr(type_str)})"
-    )  # noqa: E501
+    return Column(f"VARIANT_GET({_to_expr(_to_col(col))}, {_to_expr(path)}, {_to_expr(type_str)})")  # noqa: E501
 
 
 def try_parse_json(col: Column | str) -> Column:

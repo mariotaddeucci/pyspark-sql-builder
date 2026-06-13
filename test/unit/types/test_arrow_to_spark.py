@@ -71,9 +71,7 @@ def test_arrow_to_spark_type_map() -> None:
 
 
 def test_arrow_to_spark_type_struct() -> None:
-    t = types._arrow_to_spark_type(
-        pa.struct([pa.field("a", pa.int32()), pa.field("b", pa.string())])
-    )
+    t = types._arrow_to_spark_type(pa.struct([pa.field("a", pa.int32()), pa.field("b", pa.string())]))
     assert isinstance(t, types.StructType)
     assert len(t.fields) == 2
     assert t.fields[0].name == "a"

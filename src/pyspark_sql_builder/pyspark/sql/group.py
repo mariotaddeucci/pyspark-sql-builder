@@ -29,10 +29,7 @@ class GroupedData:
         group_by = ", ".join(_strip_alias(c._expr) for c in self._group_by_columns)
         agg_cols = ", ".join(e._expr for e in expressions)
         if self._group_by_columns:
-            sql = (
-                f"SELECT {group_cols}, {agg_cols}"
-                f" FROM ({self._df._query}) AS _t GROUP BY {group_by}"
-            )
+            sql = f"SELECT {group_cols}, {agg_cols} FROM ({self._df._query}) AS _t GROUP BY {group_by}"
         else:
             sql = f"SELECT {agg_cols} FROM ({self._df._query}) AS _t"
         return _DataFrame(sql, self._df._session)

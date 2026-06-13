@@ -129,9 +129,7 @@ class DataFrameWriter:
         try:
             for batch in reader:
                 if writer is None:
-                    writer = pa_parquet.ParquetWriter(
-                        path, batch.schema, compression=pq_compression
-                    )
+                    writer = pa_parquet.ParquetWriter(path, batch.schema, compression=pq_compression)
                 writer.write_batch(batch)
         finally:
             if writer is not None:

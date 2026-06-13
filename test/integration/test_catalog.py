@@ -67,9 +67,7 @@ def test_list_tables_contains_expected_tables(spark: SparkSession) -> None:
     table_names = {t.name for t in tables}
 
     expected_tables = {"users", "regions", "transactions", "categories"}
-    assert expected_tables.issubset(table_names), (
-        f"Missing tables: {expected_tables - table_names}"
-    )
+    assert expected_tables.issubset(table_names), f"Missing tables: {expected_tables - table_names}"
 
 
 def test_row_dict_access(spark: SparkSession) -> None:
@@ -106,16 +104,12 @@ def test_verify_tables_exist_simple_query(spark: SparkSession) -> None:
 
 def test_verify_tables_exist_multiple_tables(spark: SparkSession) -> None:
     """Test verify_tables_exist with multiple tables."""
-    spark.catalog.verify_tables_exist(
-        "SELECT * FROM users JOIN transactions ON users.id = transactions.user_id"
-    )
+    spark.catalog.verify_tables_exist("SELECT * FROM users JOIN transactions ON users.id = transactions.user_id")
 
 
 def test_verify_tables_exist_with_subquery(spark: SparkSession) -> None:
     """Test verify_tables_exist extracts tables from subqueries."""
-    spark.catalog.verify_tables_exist(
-        "SELECT * FROM users WHERE id IN (SELECT user_id FROM transactions)"
-    )
+    spark.catalog.verify_tables_exist("SELECT * FROM users WHERE id IN (SELECT user_id FROM transactions)")
 
 
 def test_verify_tables_exist_missing_table(spark: SparkSession) -> None:
@@ -130,9 +124,7 @@ def test_verify_tables_exist_missing_table(spark: SparkSession) -> None:
 def test_verify_tables_exist_missing_table_in_subquery(spark: SparkSession) -> None:
     """Test verify_tables_exist detects missing tables in subqueries."""
     with pytest.raises(AnalysisExceptionError) as exc_info:
-        spark.catalog.verify_tables_exist(
-            "SELECT * FROM users WHERE id IN (SELECT user_id FROM missing_table)"
-        )
+        spark.catalog.verify_tables_exist("SELECT * FROM users WHERE id IN (SELECT user_id FROM missing_table)")
 
     assert "missing_table" in str(exc_info.value)
 
@@ -140,9 +132,7 @@ def test_verify_tables_exist_missing_table_in_subquery(spark: SparkSession) -> N
 def test_verify_tables_exist_multiple_missing_tables(spark: SparkSession) -> None:
     """Test verify_tables_exist with multiple missing tables."""
     with pytest.raises(AnalysisExceptionError) as exc_info:
-        spark.catalog.verify_tables_exist(
-            "SELECT * FROM missing1 JOIN missing2 ON missing1.id = missing2.id"
-        )
+        spark.catalog.verify_tables_exist("SELECT * FROM missing1 JOIN missing2 ON missing1.id = missing2.id")
 
     assert "missing1" in str(exc_info.value) or "missing2" in str(exc_info.value)
 
@@ -177,9 +167,7 @@ def test_automatic_skip_on_missing_table_in_dataframe(spark: SparkSession) -> No
 
 def test_automatic_skip_on_missing_table_in_join(spark: SparkSession) -> None:
     """Test automatic skip works for missing tables in joins."""
-    df = spark.table("users").join(
-        "nonexistent_table", "users.id = nonexistent_table.user_id"
-    )
+    df = spark.table("users").join("nonexistent_table", "users.id = nonexistent_table.user_id")
 
     with pytest.raises(AnalysisExceptionError) as exc_info:
         df.toArrow()

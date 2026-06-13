@@ -36,10 +36,7 @@ class DataFrame:
         schema: list[str],
         session: SparkSession,
     ) -> DataFrame:
-        values = ", ".join(
-            f"({', '.join(repr(v) if isinstance(v, str) else str(v) for v in row)})"
-            for row in rows
-        )
+        values = ", ".join(f"({', '.join(repr(v) if isinstance(v, str) else str(v) for v in row)})" for row in rows)
         cols = ", ".join(schema)
         sql = f"SELECT {cols} FROM (VALUES {values}) AS t({cols})"
         return cls(sql, session)
@@ -57,19 +54,14 @@ class DataFrame:
         return self._wrap(f"SELECT {cols} FROM ({self._query}) AS _t")
 
     def select(self, *columns: Column | str) -> DataFrame:
-        cols = ", ".join(
-            Column(_quote_ident(c))._expr if isinstance(c, str) else c._expr
-            for c in columns
-        )
+        cols = ", ".join(Column(_quote_ident(c))._expr if isinstance(c, str) else c._expr for c in columns)
         return self._replace_select(cols)
 
     def selectExpr(self, *exprs: str) -> DataFrame:
         return self._replace_select(", ".join(exprs))
 
     def where(self, condition: Column) -> DataFrame:
-        return self._wrap(
-            f"SELECT * FROM ({self._query}) AS _t WHERE {condition._expr}"
-        )
+        return self._wrap(f"SELECT * FROM ({self._query}) AS _t WHERE {condition._expr}")
 
     def filter(self, condition: Column) -> DataFrame:
         return self.where(condition)
@@ -90,14 +82,10 @@ class DataFrame:
             on = None
         if using:
             cols = ", ".join(_quote_ident(c) for c in using)
-            return self._wrap(
-                f"{self._query} {how.upper()} JOIN {table_ref} USING ({cols})"
-            )
+            return self._wrap(f"{self._query} {how.upper()} JOIN {table_ref} USING ({cols})")
         if on is not None:
             on_sql = on._expr if isinstance(on, Column) else str(on)
-            return self._wrap(
-                f"{self._query} {how.upper()} JOIN {table_ref} ON {on_sql}"
-            )
+            return self._wrap(f"{self._query} {how.upper()} JOIN {table_ref} ON {on_sql}")
         return self._wrap(f"{self._query} {how.upper()} JOIN {table_ref}")
 
     def groupBy(self, *columns: Column | str) -> GroupedData:
@@ -105,15 +93,10 @@ class DataFrame:
         return GroupedData(self, cols)
 
     def having(self, condition: Column) -> DataFrame:
-        return self._wrap(
-            f"SELECT * FROM ({self._query}) AS _t HAVING {condition._expr}"
-        )
+        return self._wrap(f"SELECT * FROM ({self._query}) AS _t HAVING {condition._expr}")
 
     def orderBy(self, *columns: Column | str) -> DataFrame:
-        cols = ", ".join(
-            Column(_quote_ident(c))._expr if isinstance(c, str) else c._expr
-            for c in columns
-        )
+        cols = ", ".join(Column(_quote_ident(c))._expr if isinstance(c, str) else c._expr for c in columns)
         return self._wrap(f"SELECT * FROM ({self._query}) AS _t ORDER BY {cols}")
 
     def limit(self, n: int) -> DataFrame:
@@ -130,22 +113,15 @@ class DataFrame:
         return self._wrap(f"SELECT {cols} FROM ({self._query}) AS _t")
 
     def drop(self, *columns: Column | str) -> DataFrame:
-        col_names = ", ".join(
-            _quote_ident(c.name) if isinstance(c, Column) else _quote_ident(c)
-            for c in columns
-        )
+        col_names = ", ".join(_quote_ident(c.name) if isinstance(c, Column) else _quote_ident(c) for c in columns)
         return self._wrap(f"SELECT * EXCLUDE ({col_names}) FROM ({self._query}) AS _t")
 
     def withColumn(self, col_name: str, col_expr: Column) -> DataFrame:
-        return self._wrap(
-            f"SELECT *, {col_expr._expr} AS {_quote_ident(col_name)}"
-            f" FROM ({self._query}) AS _t"
-        )
+        return self._wrap(f"SELECT *, {col_expr._expr} AS {_quote_ident(col_name)} FROM ({self._query}) AS _t")
 
     def withColumnRenamed(self, existing: str, new_name: str) -> DataFrame:
         return self._wrap(
-            f"SELECT * REPLACE ({_quote_ident(existing)} AS {_quote_ident(new_name)})"
-            f" FROM ({self._query}) AS _t"
+            f"SELECT * REPLACE ({_quote_ident(existing)} AS {_quote_ident(new_name)}) FROM ({self._query}) AS _t"
         )
 
     def union(self, other: DataFrame) -> DataFrame:
@@ -189,9 +165,7 @@ class DataFrame:
 
     @property
     def dtypes(self) -> list[tuple[str, str]]:
-        return [
-            (f.name, _arrow_to_dtype_string(f.type)) for f in self._get_arrow_schema()
-        ]
+        return [(f.name, _arrow_to_dtype_string(f.type)) for f in self._get_arrow_schema()]
 
     @property
     def schema(self) -> StructType:

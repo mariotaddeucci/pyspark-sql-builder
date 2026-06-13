@@ -20,10 +20,7 @@ class InternalSettings(BaseModel):
 
     dialect: str = Field(
         default="spark",
-        description=(
-            "The SQL dialect for session operations"
-            " (Session.sql, functions.expr, DataFrame.from_sql, etc)"
-        ),
+        description=("The SQL dialect for session operations (Session.sql, functions.expr, DataFrame.from_sql, etc)"),
     )
     connection: SecretStr | None = Field(
         default=None,
@@ -39,9 +36,7 @@ class InternalSettings(BaseModel):
 
 
 class SessionSettings(BaseModel):
-    app_name: str = Field(
-        default="pyspark-sql-builder", description="The name of the application."
-    )
+    app_name: str = Field(default="pyspark-sql-builder", description="The name of the application.")
     internal: InternalSettings = Field(
         default_factory=InternalSettings,
         description="Internal settings for the SparkSession.",

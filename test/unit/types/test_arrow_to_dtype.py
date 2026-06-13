@@ -20,9 +20,6 @@ def test_arrow_to_dtype_string_scalars() -> None:
 
 def test_arrow_to_dtype_string_nested() -> None:
     assert types._arrow_to_dtype_string(pa.list_(pa.int32())) == "array<int>"
-    assert (
-        types._arrow_to_dtype_string(pa.map_(pa.string(), pa.int32()))
-        == "map<string,int>"
-    )
+    assert types._arrow_to_dtype_string(pa.map_(pa.string(), pa.int32())) == "map<string,int>"
     result = types._arrow_to_dtype_string(pa.struct([pa.field("a", pa.int32())]))
     assert result == "struct<a: int>"

@@ -50,23 +50,17 @@ class Row:
                 return self._values[idx]
             except ValueError:
                 raise KeyError(f"Column '{key}' not found in Row")
-        raise TypeError(
-            f"indices must be integers or strings, not {type(key).__name__}"
-        )
+        raise TypeError(f"indices must be integers or strings, not {type(key).__name__}")
 
     def __getattr__(self, name: str) -> Any:
         """Access value by attribute name."""
         if name.startswith("_"):
-            raise AttributeError(
-                f"'{type(self).__name__}' object has no attribute '{name}'"
-            )
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
         try:
             idx = self._fields.index(name)
             return self._values[idx]
         except ValueError:
-            raise AttributeError(
-                f"'{type(self).__name__}' object has no attribute '{name}'"
-            )
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
     def __repr__(self) -> str:
         if self._fields and not all(f.startswith("_") for f in self._fields):
@@ -104,10 +98,7 @@ class Row:
             if recursive and isinstance(v, Row):
                 result[k] = v.asDict(recursive=True)
             elif recursive and isinstance(v, (list, tuple)):
-                result[k] = [
-                    item.asDict(recursive=True) if isinstance(item, Row) else item
-                    for item in v
-                ]
+                result[k] = [item.asDict(recursive=True) if isinstance(item, Row) else item for item in v]
             else:
                 result[k] = v
         return result
@@ -244,10 +235,7 @@ class StructField:
 class StructType(DataType):
     def __init__(self, fields: list[StructField] | None = None) -> None:
         self.fields = fields or []
-        cols = ", ".join(
-            f"{f.name} {f.data_type.sql()}" + ("" if f.nullable else " NOT NULL")
-            for f in self.fields
-        )
+        cols = ", ".join(f"{f.name} {f.data_type.sql()}" + ("" if f.nullable else " NOT NULL") for f in self.fields)
         super().__init__(f"STRUCT<{cols}>" if cols else "STRUCT<>")
 
     def simpleString(self) -> str:
@@ -294,9 +282,7 @@ def _arrow_to_spark_type(t: pa.DataType) -> DataType:
         value = _arrow_to_spark_type(t.item_type)
         return MapType(key, value, t.item_field.nullable)
     if pat.is_struct(t):
-        fields = [
-            StructField(f.name, _arrow_to_spark_type(f.type), f.nullable) for f in t
-        ]
+        fields = [StructField(f.name, _arrow_to_spark_type(f.type), f.nullable) for f in t]
         return StructType(fields)
     return DataType(str(t))
 
@@ -335,7 +321,5 @@ def _print_schema_field(field: pa.Field, indent: int = 0) -> None:
 
 
 def _arrow_schema_to_struct_type(schema: pa.Schema) -> StructType:
-    fields = [
-        StructField(f.name, _arrow_to_spark_type(f.type), f.nullable) for f in schema
-    ]
+    fields = [StructField(f.name, _arrow_to_spark_type(f.type), f.nullable) for f in schema]
     return StructType(fields)

@@ -71,11 +71,7 @@ def test_cast_to_integer(spark: SparkSession) -> None:
 
 
 def test_read_struct_fields(spark: SparkSession) -> None:
-    result = (
-        spark.table("events")
-        .selectExpr("name", "metadata.age", "metadata.city")
-        .orderBy("name")
-    )
+    result = spark.table("events").selectExpr("name", "metadata.age", "metadata.city").orderBy("name")
     data = result.toArrow().to_pylist()
     assert data == [
         {"name": "Alice", "age": 30, "city": "NYC"},

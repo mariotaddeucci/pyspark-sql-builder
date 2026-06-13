@@ -82,9 +82,7 @@ def test_write_json_zstd_compression(spark: SparkSession, tmp_path: Path) -> Non
     import duckdb
 
     con = duckdb.connect()
-    table = con.execute(
-        f"SELECT * FROM read_json_auto('{path}'::TEXT)"
-    ).to_arrow_table()
+    table = con.execute(f"SELECT * FROM read_json_auto('{path}'::TEXT)").to_arrow_table()
     con.close()
     assert table.num_rows == 3
 
@@ -125,31 +123,21 @@ def test_write_parquet_zstd_compression(spark: SparkSession, tmp_path: Path) -> 
 def test_write_csv_unsupported_compression(spark: SparkSession, tmp_path: Path) -> None:
     df = spark.table("users").select("name")
     path = str(tmp_path / "bad.csv")
-    with pytest.raises(
-        ValueError, match="Unsupported compression codec for CSV: 'snappy'"
-    ):
+    with pytest.raises(ValueError, match="Unsupported compression codec for CSV: 'snappy'"):
         df.write.option("compression", "snappy").csv(path)
 
 
-def test_write_parquet_unsupported_compression(
-    spark: SparkSession, tmp_path: Path
-) -> None:
+def test_write_parquet_unsupported_compression(spark: SparkSession, tmp_path: Path) -> None:
     df = spark.table("users").select("name")
     path = str(tmp_path / "bad.parquet")
-    with pytest.raises(
-        ValueError, match="Unsupported compression codec for Parquet: 'bzip2'"
-    ):
+    with pytest.raises(ValueError, match="Unsupported compression codec for Parquet: 'bzip2'"):
         df.write.option("compression", "bzip2").parquet(path)
 
 
-def test_write_json_unsupported_compression(
-    spark: SparkSession, tmp_path: Path
-) -> None:
+def test_write_json_unsupported_compression(spark: SparkSession, tmp_path: Path) -> None:
     df = spark.table("users").select("name")
     path = str(tmp_path / "bad.json")
-    with pytest.raises(
-        ValueError, match="Unsupported compression codec for JSON: 'snappy'"
-    ):
+    with pytest.raises(ValueError, match="Unsupported compression codec for JSON: 'snappy'"):
         df.write.option("compression", "snappy").json(path)
 
 

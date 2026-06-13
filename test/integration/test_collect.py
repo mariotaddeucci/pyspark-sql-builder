@@ -45,10 +45,7 @@ def test_collect_empty_dataframe(spark: SparkSession) -> None:
 def test_collect_with_null_values(spark: SparkSession) -> None:
     """Test collect() with NULL values."""
     # Use a table-based approach to avoid NULL type inference issues
-    query = (
-        "SELECT 1 AS id, 'Alice' AS name UNION ALL "
-        "SELECT 2, 'Bob' UNION ALL SELECT 3, NULL"
-    )
+    query = "SELECT 1 AS id, 'Alice' AS name UNION ALL SELECT 2, 'Bob' UNION ALL SELECT 3, NULL"
     df = spark.sql(query)
     rows = df.collect()
     assert len(rows) == 3
@@ -86,9 +83,7 @@ def test_collect_row_len(spark: SparkSession) -> None:
 
 def test_collect_with_select_and_filter(spark: SparkSession) -> None:
     """Test collect() after select and filter operations."""
-    df = spark.sql("SELECT 1 AS id, 'Alice' AS name, 30 AS age").selectExpr(
-        "id", "name"
-    )
+    df = spark.sql("SELECT 1 AS id, 'Alice' AS name, 30 AS age").selectExpr("id", "name")
     rows = df.collect()
     assert len(rows) == 1
     assert len(rows[0]) == 2  # Only id and name columns
@@ -101,10 +96,7 @@ def test_collect_after_groupby(spark: SparkSession) -> None:
     from pyspark_sql_builder.pyspark.sql import functions as F
 
     df = (
-        spark.table("transactions")
-        .groupBy(F.col("user_id"))
-        .agg(F.sum(F.col("amount")).alias("total_amount"))
-        .limit(3)
+        spark.table("transactions").groupBy(F.col("user_id")).agg(F.sum(F.col("amount")).alias("total_amount")).limit(3)
     )
     rows = df.collect()
     assert len(rows) == 3

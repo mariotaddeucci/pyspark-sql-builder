@@ -35,9 +35,7 @@ def test_window_function(spark: SparkSession) -> None:
         .select(
             F.col("user_id"),
             F.col("amount"),
-            F.row_number()
-            .over(Window.partitionBy("user_id").orderBy(F.col("amount").desc()))
-            .alias("rn"),
+            F.row_number().over(Window.partitionBy("user_id").orderBy(F.col("amount").desc())).alias("rn"),
         )
         .orderBy(F.col("user_id"), F.col("rn"))
     )

@@ -5,9 +5,7 @@ from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 
 def test_join_inner(spark: SparkSession) -> None:
-    df = spark.table("orders").join(
-        "customers", F.col("orders.customer_id") == F.col("customers.id")
-    )
+    df = spark.table("orders").join("customers", F.col("orders.customer_id") == F.col("customers.id"))
     result = df.generate_query()
     assert "JOIN customers" in result
     assert "`orders`.`customer_id` = `customers`.`id`" in result

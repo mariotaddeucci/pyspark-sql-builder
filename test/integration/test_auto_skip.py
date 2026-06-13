@@ -15,10 +15,6 @@ def test_automatic_skip_with_missing_events_table(spark: SparkSession) -> None:
 
 def test_automatic_skip_missing_table_in_join(spark: SparkSession) -> None:
     """Test automatic skip works for missing tables in complex queries."""
-    result = (
-        spark.table("users")
-        .join("fake_table", "users.id = fake_table.user_id")
-        .select(F.col("users.name"))
-    )
+    result = spark.table("users").join("fake_table", "users.id = fake_table.user_id").select(F.col("users.name"))
     result.toArrow().to_pylist()
     assert False, "Test should have been skipped"

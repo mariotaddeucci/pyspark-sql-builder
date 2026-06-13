@@ -21,14 +21,6 @@ def test_when_chained() -> None:
     ...     .when(col("age") >= 65, "senior")
     ...     .otherwise("adult")
     """
-    c = (
-        F.when(F.col("age") < 18, "minor")
-        .when(F.col("age") >= 65, "senior")
-        .otherwise("adult")
-    )
-    expected = (
-        "CASE WHEN `age` < 18 THEN 'minor'"
-        " WHEN `age` >= 65 THEN 'senior'"
-        " ELSE 'adult' END"
-    )
+    c = F.when(F.col("age") < 18, "minor").when(F.col("age") >= 65, "senior").otherwise("adult")
+    expected = "CASE WHEN `age` < 18 THEN 'minor' WHEN `age` >= 65 THEN 'senior' ELSE 'adult' END"
     assert c._expr == expected

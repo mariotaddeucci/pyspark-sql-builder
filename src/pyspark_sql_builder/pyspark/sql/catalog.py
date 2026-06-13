@@ -42,10 +42,7 @@ class Catalog:
             # For DuckDB, query the current database from information_schema
             driver = self._session._get_driver()
             try:
-                result = driver.query(
-                    "SELECT DISTINCT table_catalog "
-                    "FROM information_schema.tables LIMIT 1"
-                )
+                result = driver.query("SELECT DISTINCT table_catalog FROM information_schema.tables LIMIT 1")
                 table = result.read_all()
                 if len(table) > 0:
                     catalogs = table.column("table_catalog").to_pylist()
@@ -77,9 +74,7 @@ class Catalog:
         elif dialect == "sqlite":
             return self._list_databases_sqlite()
         else:
-            raise NotImplementedError(
-                f"listDatabases not implemented for dialect '{dialect}'"
-            )
+            raise NotImplementedError(f"listDatabases not implemented for dialect '{dialect}'")
 
     def listTables(self, db_name: str | None = None) -> list[Row]:
         """Lists all tables in the specified database.
@@ -103,9 +98,7 @@ class Catalog:
         elif dialect == "sqlite":
             return self._list_tables_sqlite(db_name)
         else:
-            raise NotImplementedError(
-                f"listTables not implemented for dialect '{dialect}'"
-            )
+            raise NotImplementedError(f"listTables not implemented for dialect '{dialect}'")
 
     def tableExists(self, table_name: str) -> bool:
         """Check if a table exists in the current database.
@@ -244,9 +237,7 @@ class Catalog:
             table_types = table.column("tableType").to_pylist()
             is_temp = table.column("isTemporary").to_pylist()
 
-            for name, db, desc, ttype, temp in zip(
-                names, databases, descriptions, table_types, is_temp
-            ):
+            for name, db, desc, ttype, temp in zip(names, databases, descriptions, table_types, is_temp):
                 rows.append(
                     Row(
                         name=name,
