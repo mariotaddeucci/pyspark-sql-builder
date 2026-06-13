@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import polyglot_sql as _polyglot_sql
+import pyarrow as pa
 
 from pyspark_sql_builder.column import Column, _quote_ident
 from pyspark_sql_builder.group import GroupedData
@@ -233,7 +234,7 @@ class DataFrame:
             from pyspark_sql_builder.session import SparkSession as _Session
 
             session = _Session()
-        target = dialect or session.dialect
+        target = dialect or session.target_dialect
         if target == "spark":
             return sql
         try:
@@ -246,6 +247,15 @@ class DataFrame:
             except Exception:
                 return sql
 
+    def toArrow(self) -> pa.Table:
+        session = self._session
+        if session is None:
+            from pyspark_sql_builder.session import SparkSession as _Session
+
+            session = _Session()
+        query = self.generate_query()
+        return session._get_driver().toArrow(query)
+
     def show(self, n: int = 20, truncate: bool = True) -> None:
         print(self.generate_query())
 
@@ -255,6 +265,13 @@ class DataFrame:
 
     def copy(self) -> DataFrame:
         return self._clone()
+
+    @staticmethod
+    def _strip_alias(expr: str) -> str:
+        idx = expr.rfind(" AS `")
+        if idx != -1 and expr.endswith("`"):
+            return expr[:idx]
+        return expr
 
     def _build_sql(self) -> str:
         parts: list[str] = ["SELECT"]
@@ -301,7 +318,8 @@ class DataFrame:
 
         if self._group_by:
             cols = ", ".join(
-                c._expr if isinstance(c, Column) else str(c) for c in self._group_by
+                self._strip_alias(c._expr) if isinstance(c, Column) else str(c)
+                for c in self._group_by
             )
             parts.append(f"GROUP BY {cols}")
 
