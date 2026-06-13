@@ -204,6 +204,9 @@ class DataFrame:
     def toArrow(self) -> pa.Table:
         query = self.generate_query()
         session = self._session
+        # Verify that all tables referenced in the query exist
+        # This will raise AnalysisException if a table is not found
+        session.catalog.verify_tables_exist(query)
         reader = session._get_driver().query(query)
         return reader.read_all()
 

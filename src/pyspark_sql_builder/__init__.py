@@ -1,4 +1,9 @@
 from pyspark_sql_builder import functions, types
+from pyspark_sql_builder.catalog import (
+    AnalysisExceptionError,
+    Catalog,
+    Row,
+)
 from pyspark_sql_builder.column import Column
 from pyspark_sql_builder.dataframe import DataFrame
 from pyspark_sql_builder.group import GroupedData
@@ -10,6 +15,9 @@ __all__ = [
     "DataFrame",
     "Column",
     "GroupedData",
+    "Catalog",
+    "Row",
+    "AnalysisExceptionError",
     "functions",
     "types",
     "Window",

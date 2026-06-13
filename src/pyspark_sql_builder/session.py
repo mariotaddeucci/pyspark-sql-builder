@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
+from pyspark_sql_builder.catalog import Catalog
 from pyspark_sql_builder.dataframe import DataFrame
 from pyspark_sql_builder.readwriter import DataFrameReader, DataFrameWriter
 
@@ -51,6 +52,7 @@ class SparkSession:
         **kwargs: Any,
     ) -> None:
         self._driver: DatabaseDriver | None = None
+        self._catalog: Catalog | None = None
         if settings is not None:
             self._settings = settings
         else:
@@ -88,6 +90,12 @@ class SparkSession:
     @property
     def writer(self) -> DataFrameWriter:
         return DataFrameWriter(self)
+
+    @property
+    def catalog(self) -> Catalog:
+        if self._catalog is None:
+            self._catalog = Catalog(self)
+        return self._catalog
 
     def table(self, table_name: str) -> DataFrame:
         return DataFrame(f"SELECT * FROM {table_name}", session=self)

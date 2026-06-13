@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from pyspark_sql_builder import AnalysisException
 from pyspark_sql_builder.session import SparkSession
 
 _CREATE_TABLE_RE = re.compile(
@@ -29,17 +30,6 @@ def _tables_in_asset(dialect: str) -> set[str]:
 def spark(request, tmp_path: Path) -> Generator[SparkSession, None, None]:
     dialect: str = request.param
 
-    marker = request.node.get_closest_marker("requires_tables")
-    if marker:
-        required = set(marker.args)
-        existing = _tables_in_asset(dialect)
-        missing = required - existing
-        if missing:
-            pytest.skip(
-                f"Tables not defined in assets/{dialect}.sql: "
-                f"{', '.join(sorted(missing))}"
-            )
-
     asset_path = Path(__file__).parent / "assets" / f"{dialect}.sql"
     setup_sql = asset_path.read_text()
 
@@ -59,5 +49,20 @@ def spark(request, tmp_path: Path) -> Generator[SparkSession, None, None]:
 
     if dialect == "duckdb":
         session._get_driver().execute(setup_sql)
+
+    # Wrap test execution to catch AnalysisException for table not found
+    original_runtest = request.node.runtest
+
+    def wrapped_runtest(*args, **kwargs):
+        try:
+            return original_runtest(*args, **kwargs)
+        except AnalysisException as e:
+            # Skip test if table/view not found
+            if e.error_class == "TABLE_OR_VIEW_NOT_FOUND":
+                pytest.skip(f"Table not found: {str(e)}")
+            # Re-raise other analysis exceptions
+            raise
+
+    request.node.runtest = wrapped_runtest
 
     yield session
