@@ -1,0 +1,36 @@
+[project]
+name = "pyspark-sql-builder"
+version = "0.1.0"
+description = "PySpark SQL query builder powered by polyglot-sql: generate SQL for 32+ dialects using the PySpark DataFrame API"
+readme = "README.md"
+authors = [
+    { name = "Mario Taddeucci", email = "mariotaddeucci@gmx.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "polyglot-sql>=0.5.3",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.0,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pyrefly>=1.0.0",
+    "pytest>=9.0.3",
+    "ruff>=0.15.17",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "N", "UP"]
+ignore = ["N802", "N812"]
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.pyrefly]
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
+]
