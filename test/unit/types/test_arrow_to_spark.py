@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pyarrow as pa
 
-from pyspark_sql_builder import types
+from pyspark_sql_builder.pyspark.sql import types
 
 
 def test_arrow_to_spark_type_int32() -> None:

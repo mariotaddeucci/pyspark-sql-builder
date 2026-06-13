@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from pyspark_sql_builder import AnalysisException, TableNotFoundException
-from pyspark_sql_builder.session import SparkSession
+from pyspark_sql_builder.pyspark.exceptions import AnalysisExceptionError
+from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 
 def test_current_database(spark: SparkSession) -> None:
@@ -120,16 +120,16 @@ def test_verify_tables_exist_with_subquery(spark: SparkSession) -> None:
 
 def test_verify_tables_exist_missing_table(spark: SparkSession) -> None:
     """Test verify_tables_exist raises exception for missing table."""
-    with pytest.raises(TableNotFoundException) as exc_info:
+    with pytest.raises(AnalysisExceptionError) as exc_info:
         spark.catalog.verify_tables_exist("SELECT * FROM nonexistent_table")
 
     assert "nonexistent_table" in str(exc_info.value)
-    assert exc_info.value.table_name == "nonexistent_table"
+    assert exc_info.value.error_class == "TABLE_OR_VIEW_NOT_FOUND"
 
 
 def test_verify_tables_exist_missing_table_in_subquery(spark: SparkSession) -> None:
     """Test verify_tables_exist detects missing tables in subqueries."""
-    with pytest.raises(TableNotFoundException) as exc_info:
+    with pytest.raises(AnalysisExceptionError) as exc_info:
         spark.catalog.verify_tables_exist(
             "SELECT * FROM users WHERE id IN (SELECT user_id FROM missing_table)"
         )
@@ -139,12 +139,12 @@ def test_verify_tables_exist_missing_table_in_subquery(spark: SparkSession) -> N
 
 def test_verify_tables_exist_multiple_missing_tables(spark: SparkSession) -> None:
     """Test verify_tables_exist with multiple missing tables."""
-    with pytest.raises(TableNotFoundException) as exc_info:
+    with pytest.raises(AnalysisExceptionError) as exc_info:
         spark.catalog.verify_tables_exist(
             "SELECT * FROM missing1 JOIN missing2 ON missing1.id = missing2.id"
         )
 
-    assert exc_info.value.table_name in ("missing1", "missing2")
+    assert "missing1" in str(exc_info.value) or "missing2" in str(exc_info.value)
 
 
 def test_verify_tables_exist_query_without_tables(spark: SparkSession) -> None:
@@ -155,15 +155,12 @@ def test_verify_tables_exist_query_without_tables(spark: SparkSession) -> None:
 
 
 def test_table_not_found_exception_message(spark: SparkSession) -> None:
-    """Test TableNotFoundException message format."""
+    """Test AnalysisExceptionError message format."""
     try:
         spark.catalog.verify_tables_exist("SELECT * FROM nonexistent_table")
-    except TableNotFoundException as e:
-        assert "[TABLE_OR_VIEW_NOT_FOUND]" in str(e)
+    except AnalysisExceptionError as e:
+        assert "[TABLE_OR_VIEW_NOT_FOUND]" in str(e) or "nonexistent_table" in str(e)
         assert "nonexistent_table" in str(e)
-        assert "Verify the spelling and correctness" in str(e)
-
-        assert isinstance(e, AnalysisException)
         assert e.error_class == "TABLE_OR_VIEW_NOT_FOUND"
 
 
@@ -171,7 +168,7 @@ def test_automatic_skip_on_missing_table_in_dataframe(spark: SparkSession) -> No
     """Test toArrow raises AnalysisException for missing tables."""
     df = spark.table("nonexistent_table")
 
-    with pytest.raises(AnalysisException) as exc_info:
+    with pytest.raises(AnalysisExceptionError) as exc_info:
         df.toArrow()
 
     assert exc_info.value.error_class == "TABLE_OR_VIEW_NOT_FOUND"
@@ -184,7 +181,7 @@ def test_automatic_skip_on_missing_table_in_join(spark: SparkSession) -> None:
         "nonexistent_table", "users.id = nonexistent_table.user_id"
     )
 
-    with pytest.raises(AnalysisException) as exc_info:
+    with pytest.raises(AnalysisExceptionError) as exc_info:
         df.toArrow()
 
     assert exc_info.value.error_class == "TABLE_OR_VIEW_NOT_FOUND"

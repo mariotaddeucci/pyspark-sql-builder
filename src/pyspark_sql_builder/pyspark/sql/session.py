@@ -4,12 +4,15 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
-from pyspark_sql_builder.catalog import Catalog
-from pyspark_sql_builder.dataframe import DataFrame
-from pyspark_sql_builder.readwriter import DataFrameReader, DataFrameWriter
+from pyspark_sql_builder.pyspark.sql.catalog import Catalog
+from pyspark_sql_builder.pyspark.sql.dataframe import DataFrame
+from pyspark_sql_builder.pyspark.sql.readwriter import (
+    DataFrameReader,
+    DataFrameWriter,
+)
 
 if TYPE_CHECKING:
-    from pyspark_sql_builder.drivers import DatabaseDriver
+    from pyspark_sql_builder.pyspark.sql.drivers import DatabaseDriver
 
 
 class InternalSettings(BaseModel):
@@ -67,7 +70,7 @@ class SparkSession:
 
     def _get_driver(self) -> DatabaseDriver:
         if self._driver is None:
-            from pyspark_sql_builder.drivers import get_driver
+            from pyspark_sql_builder.pyspark.sql.drivers import get_driver
 
             conn = self._settings.internal.connection
             if conn is None:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from pyspark_sql_builder import functions as F
+from pyspark_sql_builder.pyspark.sql import functions as F
 
 
 def test_mask_not_implemented() -> None:

@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 import polyglot_sql as _polyglot_sql
 import pyarrow as pa
 
-from pyspark_sql_builder.column import Column, _quote_ident
-from pyspark_sql_builder.group import GroupedData
-from pyspark_sql_builder.types import (
+from pyspark_sql_builder.pyspark.sql.column import Column, _quote_ident
+from pyspark_sql_builder.pyspark.sql.group import GroupedData
+from pyspark_sql_builder.pyspark.sql.types import (
     StructType,
     _arrow_schema_to_struct_type,
     _arrow_to_dtype_string,
@@ -15,8 +15,8 @@ from pyspark_sql_builder.types import (
 )
 
 if TYPE_CHECKING:
-    from pyspark_sql_builder.readwriter import DataFrameWriter
-    from pyspark_sql_builder.session import SparkSession
+    from pyspark_sql_builder.pyspark.sql.readwriter import DataFrameWriter
+    from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 
 class DataFrame:
@@ -222,7 +222,7 @@ class DataFrame:
 
     @property
     def write(self) -> DataFrameWriter:
-        from pyspark_sql_builder.readwriter import DataFrameWriter
+        from pyspark_sql_builder.pyspark.sql.readwriter import DataFrameWriter
 
         return DataFrameWriter(self._session, self)
 

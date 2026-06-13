@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pyspark_sql_builder.readwriter import DataFrameReader
-from pyspark_sql_builder.session import SparkSession
+from pyspark_sql_builder.pyspark.sql.readwriter import DataFrameReader
+from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 
 def test_read_property(spark: SparkSession) -> None:

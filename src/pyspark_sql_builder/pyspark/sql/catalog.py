@@ -10,30 +10,10 @@ from typing import TYPE_CHECKING, Any
 
 from polyglot_sql import Table, parse_one
 
+from pyspark_sql_builder.pyspark.exceptions import AnalysisExceptionError
+
 if TYPE_CHECKING:
-    from pyspark_sql_builder.session import SparkSession
-
-
-class AnalysisExceptionError(Exception):
-    """Exception raised for analysis errors matching PySpark's AnalysisException.
-
-    This exception is raised when there are issues analyzing a SQL query,
-    such as referencing non-existent tables or invalid column references.
-
-    Mirrors: pyspark.errors.exceptions.captured.AnalysisException
-    """
-
-    def __init__(self, message: str, error_class: str | None = None) -> None:
-        """Initialize AnalysisExceptionError.
-
-        Args:
-            message: The error message.
-            error_class: Optional error class identifier (e.g.,
-                "TABLE_OR_VIEW_NOT_FOUND").
-        """
-        super().__init__(message)
-        self.message = message
-        self.error_class = error_class
+    from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 
 class Row(dict):

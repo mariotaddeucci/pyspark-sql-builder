@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from pyspark_sql_builder import AnalysisException
-from pyspark_sql_builder.session import SparkSession
+from pyspark_sql_builder.pyspark.exceptions import AnalysisExceptionError
+from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 _CREATE_TABLE_RE = re.compile(
     r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)", re.IGNORECASE
@@ -56,7 +56,7 @@ def spark(request, tmp_path: Path) -> Generator[SparkSession, None, None]:
     def wrapped_runtest(*args, **kwargs):
         try:
             return original_runtest(*args, **kwargs)
-        except AnalysisException as e:
+        except AnalysisExceptionError as e:
             # Skip test if table/view not found
             if e.error_class == "TABLE_OR_VIEW_NOT_FOUND":
                 pytest.skip(f"Table not found: {str(e)}")

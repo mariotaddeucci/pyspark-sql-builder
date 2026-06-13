@@ -6,11 +6,11 @@ import pyarrow as pa
 import pyarrow.csv as pa_csv
 import pyarrow.parquet as pa_parquet
 
-from pyspark_sql_builder.column import _quote_ident
+from pyspark_sql_builder.pyspark.sql.column import _quote_ident
 
 if TYPE_CHECKING:
-    from pyspark_sql_builder.dataframe import DataFrame
-    from pyspark_sql_builder.session import SparkSession
+    from pyspark_sql_builder.pyspark.sql.dataframe import DataFrame
+    from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 
 class DataFrameReader:
@@ -41,7 +41,9 @@ class DataFrameReader:
         return self
 
     def load(self, path: str | None = None) -> DataFrame:
-        from pyspark_sql_builder.dataframe import DataFrame as DataFrameCls
+        from pyspark_sql_builder.pyspark.sql.dataframe import (
+            DataFrame as DataFrameCls,
+        )
 
         if path:
             sql = f"SELECT * FROM {_quote_ident(path)}"

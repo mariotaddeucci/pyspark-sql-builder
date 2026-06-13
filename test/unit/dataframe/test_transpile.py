@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from pyspark_sql_builder import functions as F
-from pyspark_sql_builder.session import SparkSession
+from pyspark_sql_builder.pyspark.sql import functions as F
+from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 
 @pytest.mark.parametrize("dialect", ["spark", "duckdb", "postgres", "bigquery"])

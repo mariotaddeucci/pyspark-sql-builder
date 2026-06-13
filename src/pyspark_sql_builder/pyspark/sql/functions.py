@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pyspark_sql_builder.column import Column, _quote_ident, _to_expr
+from pyspark_sql_builder.pyspark.sql.column import Column, _quote_ident, _to_expr
 
 
 def _to_col(v: Column | str) -> Column:
