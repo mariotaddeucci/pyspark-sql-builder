@@ -167,3 +167,43 @@ def test_write_format_parquet_save(spark: SparkSession, tmp_path: Path) -> None:
     df.write.format("parquet").save(path)
     table = pa_parquet.read_table(path)
     assert table.num_rows == 3
+
+
+def test_columns(spark: SparkSession) -> None:
+    df = spark.table("users")
+    assert df.columns == ["id", "name", "email", "region_id"]
+
+
+def test_dtypes(spark: SparkSession) -> None:
+    df = spark.table("users")
+    dtypes = dict(df.dtypes)
+    assert dtypes["name"] == "string"
+    assert dtypes["email"] == "string"
+
+
+def test_schema(spark: SparkSession) -> None:
+    df = spark.table("users")
+    s = df.schema
+    assert s is not None
+    names = [f.name for f in s.fields]
+    assert names == ["id", "name", "email", "region_id"]
+
+
+def test_print_schema(spark: SparkSession) -> None:
+    df = spark.table("users")
+    import io
+    import sys
+
+    captured = io.StringIO()
+    old = sys.stdout
+    sys.stdout = captured
+    try:
+        df.printSchema()
+    finally:
+        sys.stdout = old
+    output = captured.getvalue()
+    assert output.startswith("root")
+    assert "name" in output
+    assert "string" in output
+    assert "id" in output
+    assert "nullable" in output
