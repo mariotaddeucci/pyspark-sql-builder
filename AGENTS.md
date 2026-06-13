@@ -4,10 +4,12 @@
 
 ```bash
 prek run --all-files                    # ruff fix → ruff format → pyrefly check
-uv run pytest -v                        # all 105 tests (unit + integration)
+uv run pytest -v                        # all tests (unit + integration)
 uv run pytest test/unit/ -v             # unit only
-uv run pytest test/integration/ -v      # SQLite integration only
+uv run pytest test/integration/ -v      # integration only
 uv run pytest -k "transpile"            # filter
+uv run pytest --cov --cov-report=term   # with coverage (terminal)
+uv run pytest --cov --cov-report=html   # with coverage (HTML report)
 ```
 
 ## Architecture

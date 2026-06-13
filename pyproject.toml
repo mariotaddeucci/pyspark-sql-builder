@@ -23,6 +23,7 @@ build-backend = "uv_build"
 dev = [
     "pyrefly>=1.0.0",
     "pytest>=9.0.3",
+    "pytest-cov>=6.0.0",
     "ruff>=0.15.17",
 ]
 
@@ -38,3 +39,14 @@ project-includes = [
     "**/*.py*",
     "**/*.ipynb",
 ]
+
+[tool.coverage.run]
+source = ["pyspark_sql_builder"]
+omit = ["*/test*", "*/__init__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+[tool.coverage.html]
+directory = "htmlcov"
