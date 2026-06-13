@@ -38,3 +38,16 @@ def spark(request, tmp_path: Path) -> Generator[SparkSession, None, None]:
         session._get_driver().execute(setup_sql)
 
     yield session
+
+
+def _check_dialect(session: SparkSession, required: str) -> None:
+    if session.dialect != required:
+        import pytest
+
+        pytest.skip(f"Test requires dialect='{required}', got '{session.dialect}'")
+
+
+@pytest.fixture
+def duckdb_spark(spark: SparkSession) -> SparkSession:
+    _check_dialect(spark, "duckdb")
+    return spark

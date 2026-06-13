@@ -45,3 +45,15 @@ INSERT INTO categories (id, name) VALUES
     (1, 'food'),
     (2, 'transport'),
     (3, 'entertainment');
+
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    tags TEXT[],
+    metadata STRUCT(age INTEGER, city TEXT)
+);
+
+INSERT INTO events VALUES
+    (1, 'Alice', ['admin', 'user'], {'age': 30, 'city': 'NYC'}),
+    (2, 'Bob', ['user'], {'age': 25, 'city': 'LA'}),
+    (3, 'Charlie', ['admin', 'editor', 'user'], {'age': 35, 'city': 'SF'});

@@ -97,7 +97,7 @@ class SparkSession:
 
     def range(self, start: int, end: int, step: int = 1) -> DataFrame:
         return DataFrame(
-            f"SELECT id FROM range({start}, {end}, {step})",
+            f"SELECT * FROM range({start}, {end}, {step}) AS t(id)",
             session=self,
         )
 
