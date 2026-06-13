@@ -90,16 +90,19 @@ class SparkSession:
         return DataFrameWriter(self)
 
     def table(self, table_name: str) -> DataFrame:
-        return DataFrame(table_name, session=self)
+        return DataFrame(f"SELECT * FROM {table_name}", session=self)
 
     def sql(self, query: str) -> DataFrame:
-        return DataFrame.from_sql(query, session=self)
+        return DataFrame(query, session=self)
 
     def range(self, start: int, end: int, step: int = 1) -> DataFrame:
-        return DataFrame.from_sql(
+        return DataFrame(
             f"SELECT id FROM range({start}, {end}, {step})",
             session=self,
         )
+
+    def to_arrow_reader(self, query: str) -> Any:
+        return self._get_driver().query(query)
 
     class Builder:
         _internal_settings_prefix = "internal"

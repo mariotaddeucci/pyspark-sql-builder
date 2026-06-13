@@ -8,6 +8,13 @@ if TYPE_CHECKING:
     from pyspark_sql_builder.dataframe import DataFrame
 
 
+def _strip_alias(expr: str) -> str:
+    idx = expr.rfind(" AS `")
+    if idx != -1 and expr.endswith("`"):
+        return expr[:idx]
+    return expr
+
+
 class GroupedData:
     def __init__(self, df: DataFrame, group_by_columns: list[Column]) -> None:
         self._df = df
@@ -16,22 +23,17 @@ class GroupedData:
     def agg(self, *expressions: Column) -> DataFrame:
         from pyspark_sql_builder.dataframe import DataFrame as _DataFrame
 
-        df = self._df.select(*group_by_exprs(self._group_by_columns), *expressions)
-        result = _DataFrame.__new__(_DataFrame)
-        result._table = df._table
-        result._session = df._session
-        result._raw_sql = df._raw_sql
-        result._projections = list(self._group_by_columns) + list(expressions)  # type: ignore[bad-assignment]  # noqa: E501
-        result._wheres = list(df._wheres)
-        result._joins = list(df._joins)
-        result._group_by = list(self._group_by_columns)
-        result._having = None
-        result._order_by = None
-        result._limit = None
-        result._offset = None
-        result._distinct = False
-        result._alias = None
-        return result
+        group_cols = ", ".join(c._expr for c in self._group_by_columns)
+        group_by = ", ".join(_strip_alias(c._expr) for c in self._group_by_columns)
+        agg_cols = ", ".join(e._expr for e in expressions)
+        if self._group_by_columns:
+            sql = (
+                f"SELECT {group_cols}, {agg_cols}"
+                f" FROM ({self._df._query}) AS _t GROUP BY {group_by}"
+            )
+        else:
+            sql = f"SELECT {agg_cols} FROM ({self._df._query}) AS _t"
+        return _DataFrame(sql, self._df._session)
 
     def count(self) -> DataFrame:
         return self.agg(Column("COUNT(*)"))
@@ -47,7 +49,3 @@ class GroupedData:
 
     def max(self, column: Column | str) -> DataFrame:
         return self.agg(Column(f"MAX({_to_expr(column)})"))
-
-
-def group_by_exprs(columns: list[Column]) -> list[Column]:
-    return [Column(_to_expr(c)) for c in columns]

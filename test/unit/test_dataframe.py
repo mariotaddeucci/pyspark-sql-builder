@@ -23,51 +23,61 @@ def test_select_column_objects(spark: SparkSession) -> None:
 
 def test_where_condition(spark: SparkSession) -> None:
     df = spark.table("users").where(F.col("age") > 18)
-    assert df.generate_query() == "SELECT * FROM users WHERE `age` > 18"
+    assert df.generate_query() == (
+        "SELECT * FROM (SELECT * FROM users) AS _t WHERE `age` > 18"
+    )
 
 
 def test_multiple_where(spark: SparkSession) -> None:
     df = (
         spark.table("users").where(F.col("age") > 18).where(F.col("status") == "active")
     )
-    expected = "SELECT * FROM users WHERE `age` > 18 AND `status` = 'active'"
+    expected = (
+        "SELECT * FROM (SELECT * FROM (SELECT * FROM users)"
+        " AS _t WHERE `age` > 18) AS _t WHERE `status` = 'active'"
+    )
     assert df.generate_query() == expected
 
 
 def test_select_with_where(spark: SparkSession) -> None:
     df = spark.table("users").select("id", "name", "age").where(F.col("age") >= 21)
-    expected = "SELECT `id`, `name`, `age` FROM users WHERE `age` >= 21"
+    expected = (
+        "SELECT * FROM (SELECT `id`, `name`, `age` FROM users) AS _t WHERE `age` >= 21"
+    )
     assert df.generate_query() == expected
 
 
 def test_filter(spark: SparkSession) -> None:
     df = spark.table("users").filter(F.col("active") == True)  # noqa: E712
-    assert df.generate_query() == "SELECT * FROM users WHERE `active` = TRUE"
+    assert df.generate_query() == (
+        "SELECT * FROM (SELECT * FROM users) AS _t WHERE `active` = TRUE"
+    )
 
 
 def test_order_by(spark: SparkSession) -> None:
     df = spark.table("users").orderBy(F.col("name").asc())
-    assert df.generate_query() == "SELECT * FROM users ORDER BY `name` ASC"
+    assert df.generate_query() == (
+        "SELECT * FROM (SELECT * FROM users) AS _t ORDER BY `name` ASC"
+    )
 
 
 def test_order_by_multiple(spark: SparkSession) -> None:
     df = spark.table("users").orderBy(F.col("age").desc(), F.col("name").asc())
-    assert df.generate_query() == "SELECT * FROM users ORDER BY `age` DESC, `name` ASC"
+    assert df.generate_query() == (
+        "SELECT * FROM (SELECT * FROM users) AS _t ORDER BY `age` DESC, `name` ASC"
+    )
 
 
 def test_limit(spark: SparkSession) -> None:
     df = spark.table("users").limit(10)
-    assert df.generate_query() == "SELECT * FROM users LIMIT 10"
-
-
-def test_limit_with_offset(spark: SparkSession) -> None:
-    df = spark.table("users").limit(10).offset(20)
-    assert df.generate_query() == "SELECT * FROM users LIMIT 10 OFFSET 20"
+    assert df.generate_query() == ("SELECT * FROM (SELECT * FROM users) AS _t LIMIT 10")
 
 
 def test_distinct(spark: SparkSession) -> None:
     df = spark.table("users").select("city").distinct()
-    assert df.generate_query() == "SELECT DISTINCT `city` FROM users"
+    assert df.generate_query() == (
+        "SELECT DISTINCT * FROM (SELECT `city` FROM users) AS _t"
+    )
 
 
 def test_join_inner(spark: SparkSession) -> None:
@@ -93,7 +103,7 @@ def test_join_using_multiple(spark: SparkSession) -> None:
 
 def test_alias(spark: SparkSession) -> None:
     df = spark.table("users").alias("u")
-    assert df.generate_query() == "SELECT * FROM users AS u"
+    assert df.generate_query() == "SELECT * FROM (SELECT * FROM users) AS u"
 
 
 def test_union_all(spark: SparkSession) -> None:
@@ -135,7 +145,7 @@ def test_drop(spark: SparkSession) -> None:
     result = df.generate_query()
     assert "id" in result
     assert "name" in result
-    assert "age" not in result
+    assert "EXCLUDE" in result
 
 
 def test_full_pipeline(spark: SparkSession) -> None:

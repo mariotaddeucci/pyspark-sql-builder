@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from pyspark_sql_builder.column import _quote_ident
+
 if TYPE_CHECKING:
     from pyspark_sql_builder.dataframe import DataFrame
     from pyspark_sql_builder.session import SparkSession
@@ -38,8 +40,9 @@ class DataFrameReader:
         from pyspark_sql_builder.dataframe import DataFrame as DataFrameCls
 
         if path:
-            return DataFrameCls(path, session=self._session)
-        return DataFrameCls(session=self._session)
+            sql = f"SELECT * FROM {_quote_ident(path)}"
+            return DataFrameCls(sql, session=self._session)
+        return DataFrameCls("SELECT 1", session=self._session)
 
 
 class DataFrameWriter:

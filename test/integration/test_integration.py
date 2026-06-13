@@ -10,23 +10,23 @@ def test_basic_join_agg(spark: SparkSession) -> None:
         spark.table("transactions")
         .join("users", F.col("transactions.user_id") == F.col("users.id"))
         .select(
-            F.col("users.name"),
+            F.col("users.name").alias("user_name"),
             F.col("transactions.amount"),
             F.col("transactions.date"),
         )
-        .groupBy(F.col("users.name"), F.col("transactions.date"))
+        .groupBy(F.col("user_name"), F.col("date"))
         .agg(F.sum(F.col("amount")).alias("balance"))
-        .orderBy(F.col("users.name"), F.col("transactions.date"))
+        .orderBy(F.col("user_name"), F.col("date"))
     )
     data = result.toArrow().to_pylist()
     assert len(data) == 7
-    assert data[0] == {"name": "Joao", "date": "2024-01-01", "balance": 100.0}
-    assert data[1] == {"name": "Joao", "date": "2024-01-15", "balance": -50.0}
-    assert data[2] == {"name": "Joao", "date": "2024-02-20", "balance": 25.0}
-    assert data[3] == {"name": "Maria", "date": "2024-02-01", "balance": 200.0}
-    assert data[4] == {"name": "Maria", "date": "2024-02-15", "balance": -30.0}
-    assert data[5] == {"name": "Maria", "date": "2024-03-01", "balance": 80.0}
-    assert data[6] == {"name": "Pedro", "date": "2024-01-10", "balance": 500.0}
+    assert data[0] == {"user_name": "Joao", "date": "2024-01-01", "balance": 100.0}
+    assert data[1] == {"user_name": "Joao", "date": "2024-01-15", "balance": -50.0}
+    assert data[2] == {"user_name": "Joao", "date": "2024-02-20", "balance": 25.0}
+    assert data[3] == {"user_name": "Maria", "date": "2024-02-01", "balance": 200.0}
+    assert data[4] == {"user_name": "Maria", "date": "2024-02-15", "balance": -30.0}
+    assert data[5] == {"user_name": "Maria", "date": "2024-03-01", "balance": 80.0}
+    assert data[6] == {"user_name": "Pedro", "date": "2024-01-10", "balance": 500.0}
 
 
 def test_window_function(spark: SparkSession) -> None:
@@ -61,7 +61,7 @@ def test_join_using(spark: SparkSession) -> None:
             F.col("users.email"),
             F.col("regions.name").alias("region"),
         )
-        .orderBy(F.col("users.name"))
+        .orderBy(F.col("name"))
     )
     data = result.toArrow().to_pylist()
     assert len(data) == 3
@@ -91,11 +91,13 @@ def test_multiple_joins_and_agg(spark: SparkSession) -> None:
         spark.table("transactions")
         .join("users", F.col("transactions.user_id") == F.col("users.id"))
         .join("categories", F.col("transactions.category_id") == F.col("categories.id"))
-        .where(F.col("amount") > 0)
-        .groupBy(
+        .select(
             F.col("users.name").alias("user_name"),
             F.col("categories.name").alias("category_name"),
+            F.col("amount"),
         )
+        .where(F.col("amount") > 0)
+        .groupBy(F.col("user_name"), F.col("category_name"))
         .agg(
             F.sum(F.col("amount")).alias("total"),
             F.count(F.col("amount")).alias("count"),
