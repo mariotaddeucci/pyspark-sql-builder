@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pyspark_sql_builder import functions as F
-from pyspark_sql_builder.session import SparkSession
+from pyspark_sql_builder.pyspark.sql import functions as F
+from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 
 def test_join_inner(spark: SparkSession) -> None:

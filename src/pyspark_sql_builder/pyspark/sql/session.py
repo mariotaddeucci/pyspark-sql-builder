@@ -4,11 +4,15 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
-from pyspark_sql_builder.dataframe import DataFrame
-from pyspark_sql_builder.readwriter import DataFrameReader, DataFrameWriter
+from pyspark_sql_builder.pyspark.sql.catalog import Catalog
+from pyspark_sql_builder.pyspark.sql.dataframe import DataFrame
+from pyspark_sql_builder.pyspark.sql.readwriter import (
+    DataFrameReader,
+    DataFrameWriter,
+)
 
 if TYPE_CHECKING:
-    from pyspark_sql_builder.drivers import DatabaseDriver
+    from pyspark_sql_builder.pyspark.sql.drivers import DatabaseDriver
 
 
 class InternalSettings(BaseModel):
@@ -51,6 +55,7 @@ class SparkSession:
         **kwargs: Any,
     ) -> None:
         self._driver: DatabaseDriver | None = None
+        self._catalog: Catalog | None = None
         if settings is not None:
             self._settings = settings
         else:
@@ -65,7 +70,7 @@ class SparkSession:
 
     def _get_driver(self) -> DatabaseDriver:
         if self._driver is None:
-            from pyspark_sql_builder.drivers import get_driver
+            from pyspark_sql_builder.pyspark.sql.drivers import get_driver
 
             conn = self._settings.internal.connection
             if conn is None:
@@ -89,6 +94,12 @@ class SparkSession:
     def writer(self) -> DataFrameWriter:
         return DataFrameWriter(self)
 
+    @property
+    def catalog(self) -> Catalog:
+        if self._catalog is None:
+            self._catalog = Catalog(self)
+        return self._catalog
+
     def table(self, table_name: str) -> DataFrame:
         return DataFrame(f"SELECT * FROM {table_name}", session=self)
 
@@ -97,7 +108,7 @@ class SparkSession:
 
     def range(self, start: int, end: int, step: int = 1) -> DataFrame:
         return DataFrame(
-            f"SELECT id FROM range({start}, {end}, {step})",
+            f"SELECT * FROM range({start}, {end}, {step}) AS t(id)",
             session=self,
         )
 

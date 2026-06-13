@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pyspark_sql_builder.window import Window
+    from pyspark_sql_builder.pyspark.sql.window import Window
 
 
 def _quote_ident(name: str) -> str:

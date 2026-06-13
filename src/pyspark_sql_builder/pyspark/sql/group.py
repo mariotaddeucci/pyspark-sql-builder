@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pyspark_sql_builder.column import Column, _to_expr
+from pyspark_sql_builder.pyspark.sql.column import Column, _to_expr
 
 if TYPE_CHECKING:
-    from pyspark_sql_builder.dataframe import DataFrame
+    from pyspark_sql_builder.pyspark.sql.dataframe import DataFrame
 
 
 def _strip_alias(expr: str) -> str:
@@ -21,7 +21,9 @@ class GroupedData:
         self._group_by_columns = group_by_columns
 
     def agg(self, *expressions: Column) -> DataFrame:
-        from pyspark_sql_builder.dataframe import DataFrame as _DataFrame
+        from pyspark_sql_builder.pyspark.sql.dataframe import (
+            DataFrame as _DataFrame,
+        )
 
         group_cols = ", ".join(c._expr for c in self._group_by_columns)
         group_by = ", ".join(_strip_alias(c._expr) for c in self._group_by_columns)

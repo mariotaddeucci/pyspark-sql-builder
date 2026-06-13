@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pyspark_sql_builder import functions as F
-from pyspark_sql_builder.window import Window
+from pyspark_sql_builder.pyspark.sql import functions as F
+from pyspark_sql_builder.pyspark.sql.window import Window
 
 
 def test_window_over_partition_by() -> None:

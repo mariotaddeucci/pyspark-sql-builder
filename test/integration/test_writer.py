@@ -7,7 +7,7 @@ import pyarrow.json as pa_json
 import pyarrow.parquet as pa_parquet
 import pytest
 
-from pyspark_sql_builder.session import SparkSession
+from pyspark_sql_builder.pyspark.sql.session import SparkSession
 
 
 def test_write_csv(spark: SparkSession, tmp_path: Path) -> None:
