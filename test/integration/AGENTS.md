@@ -2,8 +2,16 @@
 
 ## Fixtures
 
-- `spark` — parametrized over `sqlite` and `duckdb`. Runs each test against both engines.
-- `duckdb_spark` — wraps `spark` and **skips at fixture level** when dialect is not `duckdb`. Use for structs, arrays, explode, date functions, `range()`, or any DuckDB-only feature.
+- `spark` — parametrized over all dialects in `params`. Runs each test against every engine that has all required tables defined in its asset SQL.
+
+## Skip by table availability
+
+Use `@pytest.mark.requires_tables("table1", "table2")` to declare that a test needs specific tables. The fixture reads the dialect's `assets/<dialect>.sql`, extracts all `CREATE TABLE` names, and **skips at fixture level** if any required table is missing — with zero engine-name hardcoding.
+
+When adding a new dialect:
+1. Create `assets/<dialect>.sql` with the `CREATE TABLE` statements the tests need.
+2. The `requires_tables` mechanism automatically detects the tables → tests run on that dialect.
+3. No need to touch `params` or add conditional `pytest.skip()` logic per dialect.
 
 ## Principle
 
@@ -11,28 +19,27 @@ Every integration test must verify that for **each engine** the test runs on, th
 
 Example:
 ```python
-def test_something(duckdb_spark: SparkSession) -> None:
-    result = duckdb_spark.table("t").select(...).orderBy(...)
+import pytest
+from pyspark_sql_builder import functions as F
+from pyspark_sql_builder.session import SparkSession
+
+@pytest.mark.requires_tables("users", "transactions")
+def test_something(spark: SparkSession) -> None:
+    result = spark.table("users").select(...).orderBy(...)
     data = result.toArrow().to_pylist()
     assert data == [{"col": value, ...}, ...]
 ```
 
-## Dialect-level skip
-
-DuckDB-only tests use the `duckdb_spark` fixture. The skip happens **in the fixture** (before the test body runs), not inside the test. If a test can run on both dialects, it uses the `spark` fixture directly.
-
-To add a new dialect-specific fixture, add a `_check_dialect` call in `conftest.py`.
-
 ## Adding table data for a specific dialect
 
-Edit the corresponding `assets/<dialect>.sql` file. DuckDB-specific types (STRUCT, TEXT[], etc.) go in `assets/duckdb.sql` only. Tests that query them must use `duckdb_spark`.
+Edit the corresponding `assets/<dialect>.sql` file. DuckDB-specific types (STRUCT, TEXT[], etc.) go in `assets/duckdb.sql` only. Tests that query them must use `@pytest.mark.requires_tables("events")`.
 
 ## Running
 
 ```bash
-uv run pytest test/integration/ -v        # all integration tests
-uv run pytest test/integration/ -k duckdb  # DuckDB only
-uv run pytest test/integration/ -k sqlite  # SQLite only
+uv run pytest test/integration/ -v                         # all integration tests
+uv run pytest test/integration/ -k "not SKIPPED"           # non-skipped only
+uv run test/integration/ -v --co                         # with output
 ```
 
 ## Test pattern
@@ -41,3 +48,4 @@ uv run pytest test/integration/ -k sqlite  # SQLite only
 2. Call `.toArrow().to_pylist()` (or check `.columns`, `.dtypes`, `.schema`)
 3. Assert on the exact list of dicts or metadata
 4. Every assertion value must be deterministic (avoid `RAND()`, `CURRENT_DATE`, etc.)
+5. If the test needs specific tables, add `@pytest.mark.requires_tables(...)`

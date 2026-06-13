@@ -174,15 +174,8 @@ class DataFrame:
         target = dialect or session.target_dialect
         if target == "spark":
             return sql
-        try:
-            ast = _polyglot_sql.parse_one(sql)
-            return ast.sql(dialect=target)  # type: ignore[no-any-return]
-        except Exception:
-            try:
-                result = _polyglot_sql.transpile(sql, read="spark", write=target)
-                return result[0] if result else sql
-            except Exception:
-                return sql
+        ast = _polyglot_sql.parse_one(sql)
+        return ast.sql(dialect=target)
 
     def _get_arrow_schema(self) -> pa.Schema:
         query = f"SELECT * FROM ({self.generate_query()}) AS _t LIMIT 0"

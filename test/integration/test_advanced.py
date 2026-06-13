@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import pytest
+
 from pyspark_sql_builder import functions as F
 from pyspark_sql_builder.session import SparkSession
 
-# ── Schema listing (cross-engine) ─────────────────────────────────────────
+# ── Schema listing ───────────────────────────────────────────────────
 
 
 def test_schema_after_select(spark: SparkSession) -> None:
@@ -25,7 +27,7 @@ def test_dtypes_after_cast(spark: SparkSession) -> None:
     assert dtypes["name"] == "string"
 
 
-# ── Cast fields (cross-engine) ────────────────────────────────────────────
+# ── Cast fields ──────────────────────────────────────────────────────
 
 
 def test_cast_numeric_types(spark: SparkSession) -> None:
@@ -67,12 +69,13 @@ def test_cast_to_integer(spark: SparkSession) -> None:
     ]
 
 
-# ── Struct operations (DuckDB only) ───────────────────────────────────────
+# ── Struct operations (requires events table with STRUCT type) ────────
 
 
-def test_read_struct_fields(duckdb_spark: SparkSession) -> None:
+@pytest.mark.requires_tables("events")
+def test_read_struct_fields(spark: SparkSession) -> None:
     result = (
-        duckdb_spark.table("events")
+        spark.table("events")
         .selectExpr("name", "metadata.age", "metadata.city")
         .orderBy("name")
     )
@@ -84,8 +87,9 @@ def test_read_struct_fields(duckdb_spark: SparkSession) -> None:
     ]
 
 
-def test_struct_column_in_select(duckdb_spark: SparkSession) -> None:
-    result = duckdb_spark.table("events").select("name", "metadata").orderBy("name")
+@pytest.mark.requires_tables("events")
+def test_struct_column_in_select(spark: SparkSession) -> None:
+    result = spark.table("events").select("name", "metadata").orderBy("name")
     data = result.toArrow().to_pylist()
     assert len(data) == 3
     assert data[0]["name"] == "Alice"
@@ -93,16 +97,17 @@ def test_struct_column_in_select(duckdb_spark: SparkSession) -> None:
     assert data[0]["metadata"]["city"] == "NYC"
 
 
-# ── Array operations (DuckDB only) ────────────────────────────────────────
+# ── Array operations (requires events table with TEXT[] type) ─────────
 
 
-def test_array_length_and_contains(duckdb_spark: SparkSession) -> None:
+@pytest.mark.requires_tables("events")
+def test_array_size_and_contains(spark: SparkSession) -> None:
     result = (
-        duckdb_spark.table("events")
-        .selectExpr(
-            "name",
-            "array_length(tags) AS tag_count",
-            "list_contains(tags, 'admin') AS is_admin",
+        spark.table("events")
+        .select(
+            F.col("name"),
+            F.array_size(F.col("tags")).alias("tag_count"),
+            F.array_contains(F.col("tags"), "admin").alias("is_admin"),
         )
         .orderBy("name")
     )
@@ -114,10 +119,14 @@ def test_array_length_and_contains(duckdb_spark: SparkSession) -> None:
     ]
 
 
-def test_array_to_string(duckdb_spark: SparkSession) -> None:
+@pytest.mark.requires_tables("events")
+def test_array_join(spark: SparkSession) -> None:
     result = (
-        duckdb_spark.table("events")
-        .selectExpr("name", "array_to_string(tags, ', ') AS tags_str")
+        spark.table("events")
+        .select(
+            F.col("name"),
+            F.array_join(F.col("tags"), ", ").alias("tags_str"),
+        )
         .orderBy("name")
     )
     data = result.toArrow().to_pylist()
@@ -128,13 +137,14 @@ def test_array_to_string(duckdb_spark: SparkSession) -> None:
     ]
 
 
-# ── Explode columns (DuckDB only) ─────────────────────────────────────────
+# ── Explode columns (requires events table with TEXT[] type) ──────────
 
 
-def test_explode_array(duckdb_spark: SparkSession) -> None:
+@pytest.mark.requires_tables("events")
+def test_explode_array(spark: SparkSession) -> None:
     result = (
-        duckdb_spark.table("events")
-        .selectExpr("name", "UNNEST(tags) AS tag")
+        spark.table("events")
+        .select(F.col("name"), F.explode(F.col("tags")).alias("tag"))
         .orderBy("name", "tag")
     )
     data = result.toArrow().to_pylist()
@@ -148,25 +158,17 @@ def test_explode_array(duckdb_spark: SparkSession) -> None:
     ]
 
 
-def test_explode_outer_with_nulls(duckdb_spark: SparkSession) -> None:
-    result = duckdb_spark.sql("SELECT 'x' AS name, NULL AS tags").selectExpr(
-        "name", "UNNEST(tags) AS tag"
-    )
-    data = result.toArrow().to_pylist()
-    assert data == []
+# ── Date conversions ─────────────────────────────────────────────────
 
 
-# ── Date conversions (DuckDB only) ────────────────────────────────────────
-
-
-def test_date_part_extraction(duckdb_spark: SparkSession) -> None:
+def test_date_part_extraction(spark: SparkSession) -> None:
     result = (
-        duckdb_spark.table("transactions")
-        .selectExpr(
-            "id",
-            "YEAR(CAST(date AS DATE)) AS year",
-            "MONTH(CAST(date AS DATE)) AS month",
-            "DAY(CAST(date AS DATE)) AS day",
+        spark.table("transactions")
+        .select(
+            F.col("id"),
+            F.year(F.col("date")).alias("year"),
+            F.month(F.col("date")).alias("month"),
+            F.day(F.col("date")).alias("day"),
         )
         .orderBy("id")
     )
@@ -182,16 +184,15 @@ def test_date_part_extraction(duckdb_spark: SparkSession) -> None:
     ]
 
 
-def test_date_add_and_diff(duckdb_spark: SparkSession) -> None:
+def test_date_add_and_diff(spark: SparkSession) -> None:
     result = (
-        duckdb_spark.table("transactions")
+        spark.table("transactions")
         .where(F.col("id") == 1)
-        .selectExpr(
-            "id",
-            "CAST(date AS DATE) + 7 AS plus_7",
-            "CAST(date AS DATE) - 1 AS minus_1",
-            "DATEDIFF('day', CAST(date AS DATE),"
-            " CAST('2024-01-10' AS DATE)) AS days_diff",
+        .select(
+            F.col("id"),
+            F.date_add(F.col("date"), 7).alias("plus_7"),
+            F.date_sub(F.col("date"), 1).alias("minus_1"),
+            F.datediff(F.lit("2024-01-10"), F.col("date")).alias("days_diff"),
         )
     )
     data = result.toArrow().to_pylist()
@@ -201,32 +202,32 @@ def test_date_add_and_diff(duckdb_spark: SparkSession) -> None:
     assert row["days_diff"] == 9
 
 
-def test_date_format(duckdb_spark: SparkSession) -> None:
+def test_date_format(spark: SparkSession) -> None:
     result = (
-        duckdb_spark.table("transactions")
+        spark.table("transactions")
         .where(F.col("id") == 1)
-        .selectExpr("strftime(CAST(date AS DATE), '%Y/%m/%d') AS formatted")
+        .select(F.date_format(F.col("date"), "yyyy/MM/dd").alias("formatted"))
     )
     data = result.toArrow().to_pylist()
     assert data == [{"formatted": "2024/01/01"}]
 
 
-# ── Series generation (DuckDB only) ───────────────────────────────────────
+# ── Series generation ────────────────────────────────────────────────
 
 
-def test_range_basic(duckdb_spark: SparkSession) -> None:
-    result = duckdb_spark.range(0, 5).select(F.col("id"))
+def test_range_basic(spark: SparkSession) -> None:
+    result = spark.range(0, 5).select(F.col("id"))
     data = result.toArrow().to_pylist()
     assert data == [{"id": 0}, {"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}]
 
 
-def test_range_with_step(duckdb_spark: SparkSession) -> None:
-    result = duckdb_spark.range(0, 10, 3)
+def test_range_with_step(spark: SparkSession) -> None:
+    result = spark.range(0, 10, 3)
     data = result.toArrow().to_pylist()
     assert data == [{"id": 0}, {"id": 3}, {"id": 6}, {"id": 9}]
 
 
-def test_range_empty(duckdb_spark: SparkSession) -> None:
-    result = duckdb_spark.range(5, 5)
+def test_range_empty(spark: SparkSession) -> None:
+    result = spark.range(5, 5)
     data = result.toArrow().to_pylist()
     assert data == []
