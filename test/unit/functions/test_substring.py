@@ -1,0 +1,8 @@
+from __future__ import annotations
+
+from pyspark_sql_builder import functions as F
+
+
+def test_substring() -> None:
+    c = F.substring(F.col("x"), 2)
+    assert c._expr == "SUBSTRING(`x`, 2)"

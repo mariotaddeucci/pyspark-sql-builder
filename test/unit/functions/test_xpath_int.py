@@ -1,0 +1,8 @@
+from __future__ import annotations
+
+from pyspark_sql_builder import functions as F
+
+
+def test_xpath_int() -> None:
+    c = F.xpath_int(F.col("xml"), "/path")
+    assert c._expr == "XPATH_INT(`xml`, '/path')"

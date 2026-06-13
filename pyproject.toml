@@ -29,7 +29,7 @@ dev = [
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "N", "UP"]
-ignore = ["N802", "N812"]
+ignore = ["N802", "N803", "N812"]
 
 [tool.ruff.format]
 line-ending = "lf"

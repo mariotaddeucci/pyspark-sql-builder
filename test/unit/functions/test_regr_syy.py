@@ -1,0 +1,8 @@
+from __future__ import annotations
+
+from pyspark_sql_builder import functions as F
+
+
+def test_regr_syy() -> None:
+    c = F.regr_syy(F.col("x"), F.col("y"))
+    assert c._expr == "REGR_SYY(`x`, `y`)"

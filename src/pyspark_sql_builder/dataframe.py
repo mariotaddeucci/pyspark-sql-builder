@@ -7,6 +7,12 @@ import pyarrow as pa
 
 from pyspark_sql_builder.column import Column, _quote_ident
 from pyspark_sql_builder.group import GroupedData
+from pyspark_sql_builder.types import (
+    StructType,
+    _arrow_schema_to_struct_type,
+    _arrow_to_dtype_string,
+    _print_schema_field,
+)
 
 if TYPE_CHECKING:
     from pyspark_sql_builder.readwriter import DataFrameWriter
@@ -177,6 +183,30 @@ class DataFrame:
                 return result[0] if result else sql
             except Exception:
                 return sql
+
+    def _get_arrow_schema(self) -> pa.Schema:
+        query = f"SELECT * FROM ({self.generate_query()}) AS _t LIMIT 0"
+        reader = self._session.to_arrow_reader(query)
+        return reader.schema
+
+    @property
+    def columns(self) -> list[str]:
+        return self._get_arrow_schema().names
+
+    @property
+    def dtypes(self) -> list[tuple[str, str]]:
+        return [
+            (f.name, _arrow_to_dtype_string(f.type)) for f in self._get_arrow_schema()
+        ]
+
+    @property
+    def schema(self) -> StructType:
+        return _arrow_schema_to_struct_type(self._get_arrow_schema())
+
+    def printSchema(self) -> None:
+        print("root")
+        for field in self._get_arrow_schema():
+            _print_schema_field(field, indent=2)
 
     def toArrow(self) -> pa.Table:
         query = self.generate_query()
